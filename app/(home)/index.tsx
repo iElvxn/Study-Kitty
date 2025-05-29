@@ -5,8 +5,13 @@ import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function HomeScreen() {
+  const { isSignedIn } = useAuth()
+
+
+  
   return (
     <ParallaxScrollView
       headerBackgroundColor="#1C1C1C"

@@ -1,10 +1,11 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { ScreenDropdown } from '@/components/ScreenDropdown';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { Slot } from 'expo-router';
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -12,15 +13,12 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <ScreenDropdown />
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar style="light" />
-    </ThemeProvider>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+        <Slot />
+    </ClerkProvider>
   );
 }

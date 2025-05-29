@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { Colors } from '@/constants/Colors';
+import { SignOutButton } from './SignOutButton';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
@@ -44,6 +45,8 @@ export function ScreenDropdown() {
               <ThemedText>{screen.name}</ThemedText>
             </TouchableOpacity>
           ))}
+          <View style={styles.divider} />
+          <SignOutButton onSignOut={() => setIsOpen(false)} />
         </ThemedView>
       )}
     </View>
@@ -83,5 +86,10 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 12,
     borderRadius: 6,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.icon,
+    marginVertical: 4,
   },
 }); 
