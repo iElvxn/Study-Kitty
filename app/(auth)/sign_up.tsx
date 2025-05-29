@@ -1,12 +1,13 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
-import { useSignUp } from '@clerk/clerk-expo';
-import { Link, useRouter } from 'expo-router';
+import { useAuth, useSignUp } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { signOut } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = React.useState('');
@@ -15,26 +16,68 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState('');
 
+  const inputRefs = React.useRef<TextInput[]>([]);
+  const [codeDigits, setCodeDigits] = React.useState(['', '', '', '', '', '']);
+
+  // Reset any existing session when mounting the sign-up screen
+  React.useEffect(() => {
+    const resetSession = async () => {
+      try {
+        await signOut();
+      } catch (err) {
+      }
+    };
+    resetSession();
+  }, []);
+
+  const handleSignInPress = async () => {
+    try {
+      // Try to clean up any existing session before navigating
+      await signOut();
+    } catch (err) {
+      // Ignore errors - user might not be signed in
+    }
+    router.replace('/(auth)/sign_in');
+  };
+
+  // Handle individual digit input
+  const handleDigitChange = (text: string, index: number) => {
+    if (text.length > 1) text = text[0]; // Only take first character if multiple entered
+    
+    const newCodeDigits = [...codeDigits];
+    newCodeDigits[index] = text;
+    setCodeDigits(newCodeDigits);
+    setCode(newCodeDigits.join(''));
+
+    if (text.length === 1 && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !codeDigits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const onResendPress = async () => {
+    if (!isLoaded) return;
+    await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+  };
+
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
-    // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress,
         password,
       });
 
-      // Send user an email with verification code
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
       setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
     }
   };
@@ -44,46 +87,79 @@ export default function SignUpScreen() {
     if (!isLoaded) return;
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
       });
 
-      // If verification was completed, set the session to active
-      // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace('/(home)/explore');
+        router.replace('/(home)');
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
     }
   };
 
   if (pendingVerification) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <IconSymbol name="chevron.left" size={24} color={Colors.text} />
-          <Text style={styles.title}>Verify your email</Text>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          <View style={styles.topSection}>
+            <View style={styles.header}>
+              <IconSymbol name="chevron.left" size={24} color="#000" />
+            </View>
+            <Text style={[styles.verifyTitle, { color: '#000' }]}>Verification</Text>
+            <Text style={[styles.verifySubtitle, { color: '#666' }]}>
+              We sent you an Email{'\n'}with a 6-digit code
+            </Text>
+          </View>
+
+          <View style={styles.bottomSection}>
+            <View style={styles.codeInputContainer}>
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <TextInput
+                  key={index}
+                  ref={(ref) => {
+                    if (ref) {
+                      inputRefs.current[index] = ref;
+                    }
+                  }}
+                  style={styles.codeInput}
+                  value={codeDigits[index]}
+                  onChangeText={(text) => handleDigitChange(text, index)}
+                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  selectTextOnFocus
+                  placeholder="0"
+                  placeholderTextColor="#666"
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity 
+              style={[
+                styles.continueButton,
+                { opacity: code.length === 6 ? 1 : 0.5 }
+              ]} 
+              onPress={onVerifyPress}
+              disabled={code.length !== 6}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+              <IconSymbol name="arrow.right" size={20} color="#000" style={styles.buttonIcon} />
+            </TouchableOpacity>
+
+            <View style={styles.resendContainer}>
+              <Text style={styles.resendText}>Didn't receive a code?</Text>
+              <TouchableOpacity onPress={onResendPress}>
+                <Text style={styles.resendButton}>Resend</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-        <TextInput
-          style={styles.input}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#666"
-          onChangeText={(code) => setCode(code)}
-        />
-        <TouchableOpacity style={styles.mainButton} onPress={onVerifyPress}>
-          <Text style={styles.mainButtonText}>Verify</Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableWithoutFeedback>
     );
   }
 
@@ -92,7 +168,8 @@ export default function SignUpScreen() {
       <View style={styles.topSection}>
         <View style={styles.header}>
           <IconSymbol name="chevron.left" size={24} color="#000" />
-          <Text style={[styles.title, { color: '#000' }]}>Get your free account</Text>
+          <Text style={[styles.title, { color: '#000' , fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold'}]}>Get Started</Text>
+          <Text style={[styles.title, { color: '#000' , fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular'}]}>Enter distraction-free focus in the cat cafe</Text>
         </View>
       </View>
 
@@ -149,11 +226,9 @@ export default function SignUpScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already have an account?</Text>
-          <Link href="/(auth)/sign_in" asChild>
-            <TouchableOpacity>
-              <Text style={styles.linkText}>Login</Text>
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity onPress={handleSignInPress}>
+            <Text style={styles.linkText}>Login</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -267,6 +342,53 @@ const styles = StyleSheet.create({
     right: 16,
     top: '50%',
     transform: [{ translateY: -10 }],
+  },
+  verifyTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  verifySubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  codeInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 40,
+    marginBottom: 40,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  codeInput: {
+    width: 45,
+    height: 45,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+    fontSize: 24,
+    textAlign: 'center',
+    color: Colors.text,
+    backgroundColor: 'transparent',
+  },
+  buttonIcon: {
+    marginLeft: 8,
+  },
+  resendContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  resendText: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  resendButton: {
+    color: '#C7B6F5',
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 
 

@@ -19,7 +19,7 @@ export const SignOutButton = ({ onSignOut }: SignOutButtonProps) => {
       onSignOut?.()
       // Redirect to your desired page
       console.log('signing out')
-      Linking.openURL(Linking.createURL('/(auth)/sign_in'))
+      Linking.openURL(Linking.createURL('/(auth)'))
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling

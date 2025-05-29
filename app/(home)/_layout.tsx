@@ -7,7 +7,7 @@ export default function AuthRoutesLayout() {
   const { isSignedIn } = useAuth()
 
   if (!isSignedIn) {
-    return <Redirect href={'/(auth)/sign_up'} />
+    return <Redirect href={'/(auth)/index'} />
   }
 
   return (
