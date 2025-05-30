@@ -8,7 +8,7 @@ export default function AuthIndexScreen() {
             <View style={styles.content}>
                 <View style={styles.imageContainer}>
                     <Image 
-                        source={require('@/assets/images/auth-logo.png')}
+                        source={require('@/assets/images/cat-cafe-banner.png')}
                         style={styles.logo}
                     />
                 </View>

@@ -33,7 +33,7 @@ export default function SignInScreen() {
     } catch (err) {
       // Ignore errors - user might not be signed in
     }
-    router.replace('/(auth)/sign_up');
+    router.push('/(auth)/sign_up');
   };
 
   // Handle the submission of the sign-in form
@@ -57,11 +57,17 @@ export default function SignInScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    router.back();
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.header}>
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <TouchableOpacity onPress={handleBackPress}>
+            <IconSymbol name="chevron.left" size={24} color="#000"/>
+          </TouchableOpacity>
           <Text style={[styles.title, { color: '#000' , fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold'}]}>Lets Sign You In</Text>
           <Text style={[styles.title, { color: '#000' , fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular'}]}>Return to your cat cafe focus zone
           </Text>

@@ -37,7 +37,7 @@ export default function SignUpScreen() {
     } catch (err) {
       // Ignore errors - user might not be signed in
     }
-    router.replace('/(auth)/sign_in');
+    router.push('/(auth)/sign_in');
   };
 
   // Handle individual digit input
@@ -102,13 +102,19 @@ export default function SignUpScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    router.back();
+  }
+
   if (pendingVerification) {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           <View style={styles.topSection}>
             <View style={styles.header}>
-              <IconSymbol name="chevron.left" size={24} color="#000" />
+              <TouchableOpacity onPress={handleBackPress}>
+                <IconSymbol name="chevron.left" size={24} color="#000" />
+              </TouchableOpacity>
             </View>
             <Text style={[styles.verifyTitle, { color: '#000' }]}>Verification</Text>
             <Text style={[styles.verifySubtitle, { color: '#666' }]}>
@@ -167,7 +173,9 @@ export default function SignUpScreen() {
     <View style={styles.container}>
       <View style={styles.topSection}>
         <View style={styles.header}>
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <TouchableOpacity onPress={handleBackPress}>
+            <IconSymbol name="chevron.left" size={24} color="#000" />
+          </TouchableOpacity>
           <Text style={[styles.title, { color: '#000' , fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold'}]}>Get Started</Text>
           <Text style={[styles.title, { color: '#000' , fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular'}]}>Enter distraction-free focus in the cat cafe</Text>
         </View>
