@@ -1,8 +1,10 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
-import { useAuth, useSignUp } from '@clerk/clerk-expo';
+import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
+import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useCallback } from 'react';
 import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 export default function SignUpScreen() {
@@ -29,6 +31,32 @@ export default function SignUpScreen() {
     };
     resetSession();
   }, []);
+
+  WebBrowser.maybeCompleteAuthSession()
+
+  const { startSSOFlow } = useSSO()
+
+  const handleSignInWithSSO = useCallback(async (authStrategy: string) => {
+    try {
+      // Start the authentication process by calling `startSSOFlow()`
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
+        strategy: `oauth_${authStrategy}`,
+        redirectUrl: AuthSession.makeRedirectUri(),
+      })
+
+      if (createdSessionId) {
+        setActive!({ session: createdSessionId })
+      } else {
+        // If there is no `createdSessionId`,
+        // there are missing requirements, such as MFA
+        // Use the `signIn` or `signUp` returned from `startSSOFlow`
+        // to handle next steps
+      }
+    } catch (err) {
+      // See https://clerk.com/docs/custom-flows/error-handling for more info on error handling
+      console.error(JSON.stringify(err, null, 2))
+    }
+  }, [])
 
   const handleSignInPress = async () => {
     try {
@@ -222,12 +250,12 @@ export default function SignUpScreen() {
           <View style={styles.divider} />
         </View>
 
-        <TouchableOpacity style={styles.socialButton}>
+        <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('apple')}>
           <IconSymbol name="apple.logo" size={20} color={Colors.text} />
           <Text style={styles.socialButtonText}>Continue with Apple</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.socialButton}>
+        <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('google')}>
           <IconSymbol name="g.circle" size={20} color={Colors.text} />
           <Text style={styles.socialButtonText}>Continue with Google</Text>
         </TouchableOpacity>

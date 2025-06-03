@@ -1,8 +1,10 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
-import { useAuth, useSignIn } from '@clerk/clerk-expo';
+import { useAuth, useSignIn, useSSO } from '@clerk/clerk-expo';
+import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SignInScreen() {
@@ -14,24 +16,52 @@ export default function SignInScreen() {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
 
+  WebBrowser.maybeCompleteAuthSession()
+
+  const { startSSOFlow } = useSSO()
+
+  const handleSignInWithSSO = useCallback(async (authStrategy: string) => {
+    try {
+      // Start the authentication process by calling `startSSOFlow()`
+      const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
+        strategy: `oauth_${authStrategy}`,
+        redirectUrl: AuthSession.makeRedirectUri(),
+      })
+
+      if (createdSessionId) {
+        setActive!({ session: createdSessionId })
+      } else {
+        // If there is no `createdSessionId`,
+        // there are missing requirements, such as MFA
+        // Use the `signIn` or `signUp` returned from `startSSOFlow`
+        // to handle next steps
+      }
+    } catch (err) {
+      // See https://clerk.com/docs/custom-flows/error-handling for more info on error handling
+      console.error(JSON.stringify(err, null, 2))
+    }
+  }, [])
+
   // Reset any existing session when mounting the sign-in screen
   React.useEffect(() => {
     const resetSession = async () => {
       try {
         await signOut();
       } catch (err) {
-        // Ignore errors - user might not be signed in
       }
     };
     resetSession();
+    void WebBrowser.warmUpAsync()
+    return () => {
+      // Cleanup: closes browser when component unmounts
+      void WebBrowser.coolDownAsync()
+    }
   }, []);
 
   const handleSignUpPress = async () => {
     try {
-      // Try to clean up any existing session before navigating
       await signOut();
     } catch (err) {
-      // Ignore errors - user might not be signed in
     }
     router.push('/(auth)/sign_up');
   };
@@ -115,12 +145,12 @@ export default function SignInScreen() {
           <View style={styles.divider} />
         </View>
 
-        <TouchableOpacity style={styles.socialButton}>
+        <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('apple')}>
           <IconSymbol name="apple.logo" size={20} color={Colors.text} />
           <Text style={styles.socialButtonText}>Continue with Apple</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.socialButton}>
+        <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('google')}>
           <IconSymbol name="g.circle" size={20} color={Colors.text} />
           <Text style={styles.socialButtonText}>Continue with Google</Text>
         </TouchableOpacity>

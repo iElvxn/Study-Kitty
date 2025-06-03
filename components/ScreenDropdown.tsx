@@ -2,10 +2,8 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { Colors } from '@/constants/Colors';
 import { SignOutButton } from './SignOutButton';
 import { ThemedText } from './ThemedText';
-import { ThemedView } from './ThemedView';
 import { IconSymbol } from './ui/IconSymbol';
 
 const SCREENS = [
@@ -27,12 +25,12 @@ export function ScreenDropdown() {
         <IconSymbol
           name="line.3.horizontal"
           size={24}
-          color={Colors.text}
+          color="#fff"
         />
       </TouchableOpacity>
 
       {isOpen && (
-        <ThemedView style={styles.dropdown}>
+        <View style={styles.dropdown}>
           {SCREENS.map((screen) => (
             <TouchableOpacity
               key={screen.route}
@@ -41,13 +39,13 @@ export function ScreenDropdown() {
                 router.push(screen.route);
                 setIsOpen(false);
               }}>
-              <IconSymbol name={screen.icon} size={20} color={Colors.text} />
-              <ThemedText>{screen.name}</ThemedText>
+              <IconSymbol name={screen.icon} size={20} color="#fff" />
+              <ThemedText style={styles.optionText}>{screen.name}</ThemedText>
             </TouchableOpacity>
           ))}
           <View style={styles.divider} />
           <SignOutButton onSignOut={() => setIsOpen(false)} />
-        </ThemedView>
+        </View>
       )}
     </View>
   );
@@ -63,11 +61,11 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.icon,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   dropdown: {
     position: 'absolute',
@@ -77,8 +75,10 @@ const styles = StyleSheet.create({
     width: 200,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.icon,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     padding: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backdropFilter: 'blur(10px)',
   },
   option: {
     flexDirection: 'row',
@@ -87,9 +87,13 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 6,
   },
+  optionText: {
+    color: '#fff',
+    fontSize: 16,
+  },
   divider: {
     height: 1,
-    backgroundColor: Colors.icon,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginVertical: 4,
   },
 }); 
