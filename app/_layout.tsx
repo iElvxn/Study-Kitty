@@ -1,3 +1,9 @@
+import {
+  Quicksand_400Regular,
+  Quicksand_500Medium,
+  Quicksand_700Bold,
+  useFonts as useQuicksand
+} from '@expo-google-fonts/quicksand';
 import { useFonts } from 'expo-font';
 import 'react-native-reanimated';
 
@@ -8,11 +14,17 @@ import { Slot } from 'expo-router';
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  if (!loaded) {
+  const [quicksandLoaded] = useQuicksand({
+    Quicksand_400Regular,
+    Quicksand_500Medium,
+    Quicksand_700Bold,
+  });
+
+  if (!fontsLoaded || !quicksandLoaded) {
     return null;
   }
 
