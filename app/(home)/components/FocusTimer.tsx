@@ -2,7 +2,11 @@ import Slider from '@react-native-community/slider';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function FocusTimer() {
+interface FocusTimerProps {
+  onStateChange?: (isActive: boolean) => void;
+}
+
+export default function FocusTimer({ onStateChange }: FocusTimerProps) {
   const [isActive, setIsActive] = useState(false);
   const [time, setTime] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
@@ -19,12 +23,15 @@ export default function FocusTimer() {
       setTime(initialTime);
     }
 
+    // Notify parent component of state change
+    onStateChange?.(isActive);
+
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [isActive, time, initialTime]);
+  }, [isActive, time, initialTime, onStateChange]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -101,6 +108,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_700Bold',
     color: '#F9E4BC',
     opacity: 0.9,
+    textShadowColor: 'rgb(27, 18, 2)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 2,
   },
   button: {
     paddingHorizontal: 24,
