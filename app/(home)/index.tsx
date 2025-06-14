@@ -1,12 +1,20 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FocusTimer from './components/FocusTimer';
+import Furniture from './components/Furniture';
+import { Upgrade, getUpgrades } from './upgrade';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
+
+  useEffect(() => {
+    // Get the current upgrades when the component mounts
+    setUpgrades(getUpgrades());
+  }, []);
 
   const handleUpgradePress = () => {
     router.push('/upgrade');
@@ -19,6 +27,7 @@ export default function HomeScreen() {
         style={styles.backgroundImage}
         resizeMode="cover"
       />
+      <Furniture upgrades={upgrades} />
       <View style={styles.content}>
         <FocusTimer onStateChange={setIsTimerActive} />
       </View>
