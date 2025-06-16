@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Upgrade } from '../upgrade';
 
@@ -6,7 +7,7 @@ interface FurnitureProps {
     upgrades: Upgrade[];
 }
 
-export default function Furniture({ upgrades }: FurnitureProps) {
+const Furniture = ({ upgrades }: FurnitureProps) => {
     return (
         <View style={styles.container}>
             {upgrades.map(upgrade => {
@@ -24,7 +25,7 @@ export default function Furniture({ upgrades }: FurnitureProps) {
                                 source={levelData.image}
                                 style={styles.furniture}
                                 contentFit="contain"
-                                cachePolicy="memory-disk"
+                                cachePolicy="disk"
                             />
                         );
                     }
@@ -33,7 +34,9 @@ export default function Furniture({ upgrades }: FurnitureProps) {
             })}
         </View>
     );
-}
+};
+
+export default memo(Furniture);
 
 const styles = StyleSheet.create({
     container: {

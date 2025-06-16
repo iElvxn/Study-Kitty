@@ -33,7 +33,7 @@ export default function HomeScreen() {
       </View>
       {!isTimerActive ? 
         <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
-          <Text style={styles.upgradeButtonText}>Upgrade Room</Text>
+          <Text style={styles.upgradeButtonText}>Upgrade Cafe</Text>
         </TouchableOpacity>
       : null}
     </View>

@@ -157,7 +157,7 @@ const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade:
                     source={nextLevelInfo.icon} 
                     style={styles.upgradeImage}
                     contentFit="contain"
-                    cachePolicy="memory-disk"
+                    cachePolicy="disk"
                 />
             )}
             <View style={styles.upgradeInfoContainer}>
@@ -201,7 +201,7 @@ const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade:
     );
 });
 
-export default function Upgrade() {
+const UpgradeScreen = () => {
     const [upgrades, setUpgrades] = useState<Upgrade[]>(globalUpgrades);
     const [error, setError] = useState<string | null>(null);
     const [isUpgrading, setIsUpgrading] = useState(false);
@@ -268,14 +268,16 @@ export default function Upgrade() {
                 </View>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => router.push("/(home)")}
+                    onPress={() => router.back()}
                 >
                     <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>← Return to Cafe</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
-}
+};
+
+export default memo(UpgradeScreen);
 
 const styles = StyleSheet.create({
     container: {
