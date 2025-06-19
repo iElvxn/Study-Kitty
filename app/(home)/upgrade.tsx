@@ -1,3 +1,5 @@
+import * as users from "@/app/aws/users";
+import { useAuth } from "@clerk/clerk-expo";
 import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -205,6 +207,7 @@ const UpgradeScreen = () => {
     const [upgrades, setUpgrades] = useState<Upgrade[]>(globalUpgrades);
     const [error, setError] = useState<string | null>(null);
     const [isUpgrading, setIsUpgrading] = useState(false);
+    const { getToken } = useAuth();
 
     useEffect(() => {
         // Only fetch if global state is empty
@@ -271,6 +274,24 @@ const UpgradeScreen = () => {
                     onPress={() => router.back()}
                 >
                     <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>← Return to Cafe</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={async () => {
+                        try {
+                            const token = await getToken();
+                            if (token) {
+                                await users.createUser(token);
+                            } else {
+                                console.error('No token available');
+                            }
+                        } catch (error) {
+                            console.error('Error getting user:', error);
+                        }
+                    }}
+                >
+                    <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>Get User</Text>
                 </TouchableOpacity>
             </View>
         </View>
