@@ -9,7 +9,7 @@ import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWitho
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = React.useState('');
@@ -46,6 +46,7 @@ export default function SignUpScreen() {
 
       if (createdSessionId) {
         setActive!({ session: createdSessionId })
+
       } else {
         // If there is no `createdSessionId`,
         // there are missing requirements, such as MFA
@@ -110,6 +111,7 @@ export default function SignUpScreen() {
     }
   };
 
+
   // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return;
@@ -119,7 +121,8 @@ export default function SignUpScreen() {
         code,
       });
 
-      if (signUpAttempt.status === 'complete') {
+      if (signUpAttempt.status === 'complete') { //sign up complete
+        console.log("signing in")
         await setActive({ session: signUpAttempt.createdSessionId });
         router.replace('/(home)');
       } else {

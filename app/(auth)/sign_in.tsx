@@ -6,10 +6,11 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { createUserData } from '../../app/aws/users';
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
-  const { signOut } = useAuth();
+  const { signOut, getToken, userId } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = React.useState('');
@@ -24,12 +25,14 @@ export default function SignInScreen() {
     try {
       // Start the authentication process by calling `startSSOFlow()`
       const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
-        strategy: `oauth_${authStrategy}`,
+        strategy: authStrategy as any, // Type assertion to fix linter error
         redirectUrl: AuthSession.makeRedirectUri(),
       })
 
       if (createdSessionId) {
         setActive!({ session: createdSessionId })
+        // Create user data after successful SSO authentication
+        await createUserAfterAuth();
       } else {
         // If there is no `createdSessionId`,
         // there are missing requirements, such as MFA
@@ -41,6 +44,18 @@ export default function SignInScreen() {
       console.error(JSON.stringify(err, null, 2))
     }
   }, [])
+
+  const createUserAfterAuth = async () => {
+    try {
+      const token = await getToken();
+      if (token && userId) {
+        await createUserData(token, userId);
+      }
+    } catch (error) {
+      console.error('Error creating user data:', error);
+      // Don't block the user flow if user creation fails
+    }
+  };
 
   // Reset any existing session when mounting the sign-in screen
   React.useEffect(() => {
@@ -78,6 +93,10 @@ export default function SignInScreen() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
+        
+        // Create user data after successful authentication
+        await createUserAfterAuth();
+        
         router.replace('/(home)');
       } else {
         console.error(JSON.stringify(signInAttempt, null, 2));
