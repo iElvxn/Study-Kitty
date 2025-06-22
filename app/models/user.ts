@@ -1,3 +1,5 @@
+import { CafeRecord } from "./cafe";
+
 export interface UserRecord {
     id: string; // Clerk user ID 
     coins: number;
@@ -9,11 +11,4 @@ export interface UserRecord {
     longestStreak: number; // Longest daily study streak achieved
     level: number; // User level based on total study time
     experience: number; // Experience points earned
-}
-
-export interface CafeRecord {
-    id: string;
-    name: string; // Custom name given by user
-    upgradeLevel: number
-    isUnlocked: boolean; // Whether this cafe is available
 }

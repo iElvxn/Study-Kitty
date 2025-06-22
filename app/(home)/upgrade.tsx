@@ -1,152 +1,18 @@
-import * as users from "@/app/aws/users";
 import { useAuth } from "@clerk/clerk-expo";
 import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
 import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { getUser } from "../aws/users";
+import { CAFES } from "../gameData/cafeData";
+import { Upgrade } from "../models/upgrade";
+import { UserRecord } from "../models/user";
 
-export interface UpgradeLevel {
-    description: string;
-    cost: number;
-    icon: any; // Image source
-    image: any; // Image source
-    position: {
-        x: number; // x position relative to background (0-100%)
-        y: number; // y position relative to background (0-100%)
-    };
-}
-
-export interface Upgrade {
-    id: string;
-    name: string;
-    level: number;
-    maxLevel: number;
-    levels: Record<number, UpgradeLevel>;
-}
-
-// This would come from your server/database
-export const SAMPLE_UPGRADES: Upgrade[] = [
-    {
-        id: 'Cat Tree',
-        name: 'Cat Tree',
-        level: 1,
-        maxLevel: 4,
-        levels: {
-            2: {
-                description: 'A double cat tree for your cats to rest on',
-                cost: 100,
-                icon: require('@/assets/images/upgrades/Cat Tree 1 Icon.png'),
-                image: require('@/assets/images/upgrades/Cat Tree 1.png'),
-                position: { x: 20, y: 60 }
-            },
-            3: {
-                description: 'A taller cat tree for your cat',
-                cost: 250,
-                icon: require('@/assets/images/upgrades/Cat Tree 2 Icon.png'),
-                image: require('@/assets/images/upgrades/Cat Tree 2.png'),
-                position: { x: 20, y: 60 }
-            },
-            4: {
-                description: 'A double cat tree for your cats to rest on',
-                cost: 500,
-                icon: require('@/assets/images/upgrades/Cat Tree 3 Icon.png'),
-                image: require('@/assets/images/upgrades/Cat Tree 3.png'),
-                position: { x: 20, y: 60 }
-            }
-        }
-    },
-    {
-        id: 'Tables',
-        name: 'Tables',
-        level: 1,
-        maxLevel: 5,
-        levels: {
-            2: {
-                description: 'A cozy little coffee table',
-                cost: 50,
-                icon: require('@/assets/images/upgrades/Table 1 Icon.png'),
-                image: require('@/assets/images/upgrades/Table 1.png'),
-                position: { x: 50, y: 70 }
-            },
-            3: {
-                description: 'Automatic food dispenser',
-                cost: 300,
-                icon: require('@/assets/images/upgrades/Table 2 Icon.png'),
-                image: require('@/assets/images/upgrades/Table 2.png'),
-                position: { x: 50, y: 70 }
-            },
-            4: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Table 3 Icon.png'),
-                image: require('@/assets/images/upgrades/Table 3.png'),
-                position: { x: 50, y: 70 }
-            },
-            5: {
-                description: 'Smart food dispenser with portion control',
-                cost: 1200,
-                icon: require('@/assets/images/upgrades/Table 4 Icon.png'),
-                image: require('@/assets/images/upgrades/Table 4.png'),
-                position: { x: 50, y: 70 }
-            }
-        }
-    },
-    {
-        id: 'Decor',
-        name: 'Decor',
-        level: 1,
-        maxLevel: 7,
-        levels: {
-            2: {
-                description: 'A tabby cat rug for your cats to rest on!',
-                cost: 300,
-                icon: require('@/assets/images/upgrades/Decor 1 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 1.png'),
-                position: { x: 80, y: 65 }
-            },
-            3: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Decor 2 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 2.png'),
-                position: { x: 80, y: 65 }
-            },
-            4: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Decor 3 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 3.png'),
-                position: { x: 80, y: 65 }
-            },
-            5: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Decor 4 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 4.png'),
-                position: { x: 80, y: 65 }
-            },
-            6: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Decor 5 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 5.png'),
-                position: { x: 80, y: 65 }
-            },
-            7: {
-                description: 'Smart food dispenser with portion control',
-                cost: 600,
-                icon: require('@/assets/images/upgrades/Decor 6 Icon.png'),
-                image: require('@/assets/images/upgrades/Decor 6.png'),
-                position: { x: 80, y: 65 }
-            }
-        }
-    }
-];
-
-// Create a global state for upgrades that can be accessed from other components
-let globalUpgrades: Upgrade[] = SAMPLE_UPGRADES;
-
-export const getUpgrades = () => globalUpgrades;
+export const getUpgrades = async (token: string) => {
+    const user: UserRecord = await getUser(token);
+    const currentCafe = CAFES[user.currentCafe];
+    return currentCafe.upgrades;
+};
 
 const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade: (id: string) => void }) => {
     const nextLevel = upgrade.level < upgrade.maxLevel ? upgrade.level + 1 : null;
@@ -204,47 +70,62 @@ const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade:
 });
 
 const UpgradeScreen = () => {
-    const [upgrades, setUpgrades] = useState<Upgrade[]>(globalUpgrades);
+    const { getToken } = useAuth();
+    const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isUpgrading, setIsUpgrading] = useState(false);
-    const { getToken } = useAuth();
 
     useEffect(() => {
-        // Only fetch if global state is empty
-        if (globalUpgrades.length === 0) {
-            fetchUpgrades();
-        }
+        const fetchUpgrades = async () => {
+            try {
+                const token = await getToken();
+                if (!token) throw new Error('No token');
+                const upgrades = await getUpgrades(token);
+                setUpgrades(upgrades);
+            } catch (err) {
+                setError('Failed to load upgrades');
+                console.error(err);
+            }
+        };
+        fetchUpgrades();
     }, []);
-
-    const fetchUpgrades = async () => {
-        try {
-            setUpgrades(SAMPLE_UPGRADES);
-            globalUpgrades = SAMPLE_UPGRADES;
-        } catch (err) {
-            setError('Failed to load upgrades');
-            console.error(err);
-        }
-    };
 
     const handleUpgrade = useCallback(async (upgradeId: string) => {
         if (isUpgrading) return;
         
         setIsUpgrading(true);
         try {
-            const upgrade = upgrades.find(upgrade => upgrade.id === upgradeId);
-            if (upgrade && upgrade.level < upgrade.maxLevel) {
-                const nextLevel = upgrade.level + 1;
-                if (upgrade.levels[nextLevel]) {
-                    const newUpgrades = upgrades.map(u => 
-                        u.id === upgradeId 
-                            ? { ...u, level: nextLevel }
-                            : u
-                    );
-                    setUpgrades(newUpgrades);
-                    globalUpgrades = newUpgrades;
+            console.log(upgradeId)
+            const token = await getToken();
+            if (!token) throw new Error('No token');
+            const user = await getUser(token);
+            
+            // Get the user's current upgrade level for this upgrade
+            const currentLevel = (user.cafes[user.currentCafe].upgrades as any)[upgradeId];
+            
+            // Get the static upgrade data
+            const staticUpgrade = upgrades.find(upgrade => upgrade.id === upgradeId);
+            
+            if (staticUpgrade && currentLevel < staticUpgrade.maxLevel) {
+                const nextLevel = currentLevel + 1;
+                if(user.coins >= staticUpgrade.levels[nextLevel].cost) { //check via client but also validate via server
+                    if (staticUpgrade.levels[nextLevel]) {
+                        // Update the local state with the new level
+                        const newUpgrades = upgrades.map(u => 
+                            u.id === upgradeId 
+                                ? { ...u, level: nextLevel }
+                                : u
+                        );
+                        setUpgrades(newUpgrades);
+                        
+                        //Update data and check
+                    }
                 }
             }
+        } catch (error) {
+            console.error('Error in handleUpgrade:', error);
         } finally {
+            console.log('Setting isUpgrading to false');
             setIsUpgrading(false);
         }
     }, [upgrades, isUpgrading]);
@@ -274,24 +155,6 @@ const UpgradeScreen = () => {
                     onPress={() => router.back()}
                 >
                     <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>← Return to Cafe</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={async () => {
-                        try {
-                            const token = await getToken();
-                            if (token) {
-                                await users.createUser(token);
-                            } else {
-                                console.error('No token available');
-                            }
-                        } catch (error) {
-                            console.error('Error getting user:', error);
-                        }
-                    }}
-                >
-                    <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>Get User</Text>
                 </TouchableOpacity>
             </View>
         </View>

@@ -1,20 +1,27 @@
+import { useAuth } from "@clerk/clerk-expo";
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Upgrade } from '../models/upgrade';
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
-import { Upgrade, getUpgrades } from './upgrade';
+import { getUpgrades } from './upgrade';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
+  const { getToken } = useAuth();
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
 
   useEffect(() => {
-    // Get the current upgrades when the component mounts
-    setUpgrades(getUpgrades());
-  }, []);
+    const fetchUpgrades = async () => {
+      const token = await getToken();
+      if (!token) return;
+      setUpgrades(await getUpgrades(token));
+    };
+    fetchUpgrades();
+  }, [getToken]);
 
   const handleUpgradePress = () => {
     router.push('/upgrade');

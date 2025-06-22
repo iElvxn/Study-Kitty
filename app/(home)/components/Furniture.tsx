@@ -1,7 +1,7 @@
+import { Upgrade } from '@/app/models/upgrade';
 import { Image } from 'expo-image';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Upgrade } from '../upgrade';
 
 interface FurnitureProps {
     upgrades: Upgrade[];
