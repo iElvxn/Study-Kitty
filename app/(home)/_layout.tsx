@@ -16,6 +16,7 @@ export default function AuthRoutesLayout() {
         const token = await getToken();
         if (token) {
           await initializeUser(token);
+          console.log("User initialized");
           hasInitalizedUser.current = true;
         } else {
           console.log('No token yet');
