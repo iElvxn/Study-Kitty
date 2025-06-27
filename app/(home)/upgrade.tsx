@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
 import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from "../aws/client";
 import { getUser, setCachedUserData } from "../aws/users";
 import { CAFES } from "../gameData/cafeData";
@@ -11,7 +12,7 @@ import { UserRecord } from "../models/user";
 
 export const getUpgrades = async (token: string) => {
     const user: UserRecord = await getUser(token);
-    
+
     // Find the cafe by its string ID
     const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
 
@@ -22,6 +23,16 @@ export const getUpgrades = async (token: string) => {
     return currentCafe.upgrades;
 };
 
+export const fetchUserUpgrades = async (token: string) => {
+    try {
+        const userData = await getUser(token);
+        const upgradeData = userData.cafes[userData.currentCafe].upgrades
+        return upgradeData
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 const UpgradeCard = memo(({ upgrade, onUpgrade, userCurrentLevel }: { upgrade: Upgrade, onUpgrade: (id: string) => void, userCurrentLevel: number }) => {
     const nextLevel = userCurrentLevel < upgrade.maxLevel ? userCurrentLevel + 1 : null;
     const nextLevelInfo = nextLevel ? upgrade.levels[nextLevel] : null;
@@ -29,8 +40,8 @@ const UpgradeCard = memo(({ upgrade, onUpgrade, userCurrentLevel }: { upgrade: U
     return (
         <View style={styles.upgradeCard}>
             {nextLevelInfo && (
-                <Image 
-                    source={nextLevelInfo.icon} 
+                <Image
+                    source={nextLevelInfo.icon}
                     style={styles.upgradeImage}
                     contentFit="contain"
                     cachePolicy="disk"
@@ -38,17 +49,17 @@ const UpgradeCard = memo(({ upgrade, onUpgrade, userCurrentLevel }: { upgrade: U
             )}
             <View style={styles.upgradeInfoContainer}>
                 <View style={styles.upgradeInfo}>
-                    <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text style={styles.upgradeName}>{upgrade.name}</Text>
-                        <Text style={[styles.buttonText, {color: 'black'}]}>{nextLevelInfo?.cost} Coins</Text>
+                        <Text style={[styles.buttonText, { color: 'black' }]}>{nextLevelInfo?.cost} Coins</Text>
                     </View>
 
                     <View style={styles.progressContainer}>
                         <View style={styles.progressBar}>
                             <View style={[
-                                styles.progressFill, 
+                                styles.progressFill,
                                 { width: `${Math.max(0, ((userCurrentLevel - 1) / (upgrade.maxLevel - 1)) * 100)}%` }
-                            ]} 
+                            ]}
                             />
                             <Text style={styles.progressText}>Level {userCurrentLevel} / {upgrade.maxLevel}</Text>
                         </View>
@@ -84,6 +95,7 @@ const UpgradeScreen = () => {
     const [isUpgrading, setIsUpgrading] = useState(false);
     const [user, setUser] = useState<UserRecord | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const { triggerRefresh } = useUpgrade();
 
     useEffect(() => {
         const fetchUpgrades = async () => {
@@ -104,28 +116,25 @@ const UpgradeScreen = () => {
 
     const handleUpgrade = useCallback(async (upgradeId: string) => {
         if (isUpgrading || !user) return;
-        
+
         setIsUpgrading(true);
-        try { 
-            // Use existing user state instead of fetching again
+        try {
             const userCafeData = user.cafes[user.currentCafe];
             if (!userCafeData) return;
-
             const currentLevel = (userCafeData.upgrades as any)[upgradeId];
             const staticUpgrade = upgrades.find(u => u.id === upgradeId);
-            
+
             if (staticUpgrade && currentLevel < staticUpgrade.maxLevel) {
                 const nextLevel = currentLevel + 1;
                 if (user.coins >= staticUpgrade.levels[nextLevel].cost) {
                     const body = { upgradeId };
-
                     const token = await getToken();
                     if (!token) throw new Error('No token');
                     const res = await apiRequest("/upgrades", "POST", token, body); // to purchase upgrade
                     if (res.statusCode === 200) {
-                        // Update user state with the response data
                         setUser(res.data.user);
                         await setCachedUserData(res.data.user);
+                        triggerRefresh(); // Notify furniture to refresh
                     } else {
                         console.error("Upgrade failed:", res.statusCode, res.data);
                     }
@@ -139,7 +148,7 @@ const UpgradeScreen = () => {
         } finally {
             setIsUpgrading(false);
         }
-    }, [upgrades, isUpgrading, user]);
+    }, [upgrades, isUpgrading, user, triggerRefresh]);
 
     return (
         <View style={styles.container}>
@@ -151,10 +160,20 @@ const UpgradeScreen = () => {
             />
             <View style={styles.content}>
                 <Text style={styles.title}>Cafe Upgrades</Text>
+                {user && (
+                    <View style={styles.coinsRow}>
+                        <Text style={styles.coinsText}>{user.coins}</Text>
+                        <Image 
+                            source={require('@/assets/images/coin.png')} 
+                            style={styles.coinIconImg}
+                            contentFit="contain"
+                        />
+                    </View>
+                )}
                 <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>
-                  <Text style={[styles.error, { opacity: message ? 1 : 0 }]}> 
-                    {message || ' '}
-                  </Text>
+                    <Text style={[styles.error, { opacity: message ? 1 : 0 }]}>
+                        {message || ' '}
+                    </Text>
                 </View>
                 <View style={styles.upgradeContainer}>
                     {error && <Text style={styles.error}>{error}</Text>}
@@ -162,9 +181,9 @@ const UpgradeScreen = () => {
                         const userCafeData = user?.cafes[user.currentCafe];
                         const userCurrentLevel = userCafeData ? (userCafeData.upgrades as any)[upgrade.id] || 1 : 1;
                         return (
-                            <UpgradeCard 
-                                key={upgrade.id} 
-                                upgrade={upgrade} 
+                            <UpgradeCard
+                                key={upgrade.id}
+                                upgrade={upgrade}
                                 onUpgrade={handleUpgrade}
                                 userCurrentLevel={userCurrentLevel}
                             />
@@ -175,7 +194,7 @@ const UpgradeScreen = () => {
                     style={styles.backButton}
                     onPress={() => router.back()}
                 >
-                    <Text style={{color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18}}>← Return to Cafe</Text>
+                    <Text style={{ color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18 }}>← Return to Cafe</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -337,5 +356,26 @@ const styles = StyleSheet.create({
         zIndex: 1000,
         borderWidth: 5,
         borderColor: '#caa867',
+    },
+    coinsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
+        gap: 8,
+        width: '100%',
+    },
+    coinIconImg: {
+        width: 42,
+        height: 42,
+    },
+    coinsText: {
+        fontFamily: 'Quicksand_700Bold',
+        fontSize: 32,
+        color: '#FFD700',
+        textAlign: 'center',
+        textShadowColor: '#000',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
 });

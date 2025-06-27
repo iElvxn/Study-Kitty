@@ -1,11 +1,13 @@
 import { useAuth } from "@clerk/clerk-expo";
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useUpgrade } from '../UpgradeContext';
 import { Upgrade } from '../models/upgrade';
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
-import { getUpgrades } from './upgrade';
+import { fetchUserUpgrades, getUpgrades } from "./upgrade";
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,15 +15,24 @@ export default function HomeScreen() {
   const { getToken } = useAuth();
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
+  const { refreshTrigger } = useUpgrade();
 
-  useEffect(() => {
-    const fetchUpgrades = async () => {
-      const token = await getToken();
-      if (!token) return;
-      setUpgrades(await getUpgrades(token));
-    };
-    fetchUpgrades();
-  }, [getToken]);
+  useFocusEffect(
+    useCallback(() => {
+      const getUpgradeData = async () => {
+        const token = await getToken();
+        if (!token) return;
+        const staticUpgrades = await getUpgrades(token); 
+        const userUpgradeLevels = await fetchUserUpgrades(token);
+        const mergedUpgrades = staticUpgrades.map(upg => ({
+          ...upg,
+          level: userUpgradeLevels?.[upg.id] || 1,
+        }));
+        setUpgrades(mergedUpgrades);
+      };
+      getUpgradeData();
+    }, [refreshTrigger, getToken])
+  );
 
   const handleUpgradePress = () => {
     router.push('/upgrade');
