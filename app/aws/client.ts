@@ -5,7 +5,7 @@ export const apiRequest = async <T>(
   method: string,
   token: string,
   body?: any
-): Promise<T> => {
+): Promise<{ data: T; statusCode: number }> => {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     method,
     headers: {
@@ -17,8 +17,10 @@ export const apiRequest = async <T>(
 
   if (!res.ok) {
     const err = await res.json();
+    console.error(`API Error ${res.status}:`, err);
     throw new Error(err.message || "API Error");
   }
 
-  return res.json();
+  const data = await res.json();
+  return { data, statusCode: res.status };
 };

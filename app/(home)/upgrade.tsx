@@ -3,19 +3,27 @@ import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
 import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { getUser } from "../aws/users";
+import { apiRequest } from "../aws/client";
+import { getUser, setCachedUserData } from "../aws/users";
 import { CAFES } from "../gameData/cafeData";
 import { Upgrade } from "../models/upgrade";
 import { UserRecord } from "../models/user";
 
 export const getUpgrades = async (token: string) => {
     const user: UserRecord = await getUser(token);
-    const currentCafe = CAFES[user.currentCafe];
+    
+    // Find the cafe by its string ID
+    const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
+
+    if (!currentCafe) {
+        throw new Error(`Cafe with id ${user.currentCafe} not found.`);
+    }
+
     return currentCafe.upgrades;
 };
 
-const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade: (id: string) => void }) => {
-    const nextLevel = upgrade.level < upgrade.maxLevel ? upgrade.level + 1 : null;
+const UpgradeCard = memo(({ upgrade, onUpgrade, userCurrentLevel }: { upgrade: Upgrade, onUpgrade: (id: string) => void, userCurrentLevel: number }) => {
+    const nextLevel = userCurrentLevel < upgrade.maxLevel ? userCurrentLevel + 1 : null;
     const nextLevelInfo = nextLevel ? upgrade.levels[nextLevel] : null;
 
     return (
@@ -39,10 +47,10 @@ const UpgradeCard = memo(({ upgrade, onUpgrade }: { upgrade: Upgrade, onUpgrade:
                         <View style={styles.progressBar}>
                             <View style={[
                                 styles.progressFill, 
-                                { width: `${Math.max(0, ((upgrade.level - 1) / (upgrade.maxLevel - 1)) * 100)}%` }
+                                { width: `${Math.max(0, ((userCurrentLevel - 1) / (upgrade.maxLevel - 1)) * 100)}%` }
                             ]} 
                             />
-                            <Text style={styles.progressText}>Level {upgrade.level} / {upgrade.maxLevel}</Text>
+                            <Text style={styles.progressText}>Level {userCurrentLevel} / {upgrade.maxLevel}</Text>
                         </View>
                     </View>
                 </View>
@@ -74,12 +82,16 @@ const UpgradeScreen = () => {
     const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isUpgrading, setIsUpgrading] = useState(false);
+    const [user, setUser] = useState<UserRecord | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUpgrades = async () => {
             try {
                 const token = await getToken();
                 if (!token) throw new Error('No token');
+                const userData = await getUser(token);
+                setUser(userData);
                 const upgrades = await getUpgrades(token);
                 setUpgrades(upgrades);
             } catch (err) {
@@ -91,44 +103,43 @@ const UpgradeScreen = () => {
     }, []);
 
     const handleUpgrade = useCallback(async (upgradeId: string) => {
-        if (isUpgrading) return;
+        if (isUpgrading || !user) return;
         
         setIsUpgrading(true);
-        try {
-            console.log(upgradeId)
-            const token = await getToken();
-            if (!token) throw new Error('No token');
-            const user = await getUser(token);
-            
-            // Get the user's current upgrade level for this upgrade
-            const currentLevel = (user.cafes[user.currentCafe].upgrades as any)[upgradeId];
-            
-            // Get the static upgrade data
-            const staticUpgrade = upgrades.find(upgrade => upgrade.id === upgradeId);
+        try { 
+            // Use existing user state instead of fetching again
+            const userCafeData = user.cafes[user.currentCafe];
+            if (!userCafeData) return;
+
+            const currentLevel = (userCafeData.upgrades as any)[upgradeId];
+            const staticUpgrade = upgrades.find(u => u.id === upgradeId);
             
             if (staticUpgrade && currentLevel < staticUpgrade.maxLevel) {
                 const nextLevel = currentLevel + 1;
-                if(user.coins >= staticUpgrade.levels[nextLevel].cost) { //check via client but also validate via server
-                    if (staticUpgrade.levels[nextLevel]) {
-                        // Update the local state with the new level
-                        const newUpgrades = upgrades.map(u => 
-                            u.id === upgradeId 
-                                ? { ...u, level: nextLevel }
-                                : u
-                        );
-                        setUpgrades(newUpgrades);
-                        
-                        //Update data and check
+                if (user.coins >= staticUpgrade.levels[nextLevel].cost) {
+                    const body = { upgradeId };
+
+                    const token = await getToken();
+                    if (!token) throw new Error('No token');
+                    const res = await apiRequest("/upgrades", "POST", token, body); // to purchase upgrade
+                    if (res.statusCode === 200) {
+                        // Update user state with the response data
+                        setUser(res.data.user);
+                        await setCachedUserData(res.data.user);
+                    } else {
+                        console.error("Upgrade failed:", res.statusCode, res.data);
                     }
+                } else {
+                    setMessage("You don't have enough coins for this upgrade.");
+                    setTimeout(() => setMessage(null), 1500);
                 }
             }
         } catch (error) {
             console.error('Error in handleUpgrade:', error);
         } finally {
-            console.log('Setting isUpgrading to false');
             setIsUpgrading(false);
         }
-    }, [upgrades, isUpgrading]);
+    }, [upgrades, isUpgrading, user]);
 
     return (
         <View style={styles.container}>
@@ -140,15 +151,25 @@ const UpgradeScreen = () => {
             />
             <View style={styles.content}>
                 <Text style={styles.title}>Cafe Upgrades</Text>
+                <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>
+                  <Text style={[styles.error, { opacity: message ? 1 : 0 }]}> 
+                    {message || ' '}
+                  </Text>
+                </View>
                 <View style={styles.upgradeContainer}>
                     {error && <Text style={styles.error}>{error}</Text>}
-                    {upgrades.map(upgrade => (
-                        <UpgradeCard 
-                            key={upgrade.id} 
-                            upgrade={upgrade} 
-                            onUpgrade={handleUpgrade}
-                        />
-                    ))}
+                    {upgrades.map(upgrade => {
+                        const userCafeData = user?.cafes[user.currentCafe];
+                        const userCurrentLevel = userCafeData ? (userCafeData.upgrades as any)[upgrade.id] || 1 : 1;
+                        return (
+                            <UpgradeCard 
+                                key={upgrade.id} 
+                                upgrade={upgrade} 
+                                onUpgrade={handleUpgrade}
+                                userCurrentLevel={userCurrentLevel}
+                            />
+                        );
+                    })}
                 </View>
                 <TouchableOpacity
                     style={styles.backButton}
@@ -303,7 +324,9 @@ const styles = StyleSheet.create({
     },
     error: {
         color: 'red',
+        fontFamily: 'Quicksand_500Medium',
         textAlign: 'center',
+        fontSize: 16,
         marginTop: 10,
     },
     backButton: {

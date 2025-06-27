@@ -14,7 +14,7 @@ const getCachedUserData = async (): Promise<UserRecord | null> => {
     return isExpired ? null : userData;
 };
 
-const setCachedUserData = async (userData: UserRecord): Promise<void> => {
+export const setCachedUserData = async (userData: UserRecord): Promise<void> => {
     try {        
         await AsyncStorage.setItem("userData", JSON.stringify({
             userData,
@@ -47,8 +47,8 @@ export const getUser = async (token: string): Promise<UserRecord> => {
     //if no cache or expired, get from DynamoDB
     let res = await apiRequest<UserRecord>("/users", "GET", token);
     // cache the fresh data
-    await setCachedUserData(res);
-    return res;
+    await setCachedUserData(res.data);
+    return res.data;
 };
 
 // POST /users
@@ -60,9 +60,9 @@ export const createUser = async (token: string, userData?: Partial<UserRecord>):
     let res = await apiRequest<UserRecord>("/users", "POST", token, requestBody);
     
     // Cache the newly created user data
-    await setCachedUserData(res);
+    await setCachedUserData(res.data);
     
-    return res;
+    return res.data;
 };
 
 // PUT /users (update user)
@@ -74,9 +74,9 @@ export const createUser = async (token: string, userData?: Partial<UserRecord>):
 //     let res = await apiRequest<UserRecord>(`/users/${userId}`, "PUT", token, requestBody);
 //     
 //     // Update cache with new data
-//     await setCachedUserData(res);
+//     await setCachedUserData(res.data);
 //     
-//     return res;
+//     return res.data;
 // };
 
 // Simple function to create user data after authentication
@@ -85,7 +85,7 @@ export const initializeUser = async (token: string): Promise<UserRecord> => {
     const cachedData = await getCachedUserData();
     if (cachedData) {
         console.log('Using cached user data for initialization');
-        console.log(cachedData);
+        console.log("User Data: ", cachedData);
         return cachedData;
     }
 
@@ -93,8 +93,8 @@ export const initializeUser = async (token: string): Promise<UserRecord> => {
     let res = await apiRequest<UserRecord>("/users", "GET", token);
     
     // Cache the data
-    await setCachedUserData(res);
+    await setCachedUserData(res.data);
     
-    console.log(res);
-    return res;
+    console.log(res.data);
+    return res.data;
 };

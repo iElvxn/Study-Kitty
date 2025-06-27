@@ -2,7 +2,7 @@ import { CafeRecord } from "../models/cafe";
 
 export const CAFES: CafeRecord[] = [
     {
-        id: 0,
+        id: "Cafe0",
         upgrades: [
             {
                 id: 'catTree',

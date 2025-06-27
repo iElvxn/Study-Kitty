@@ -1,0 +1,63 @@
+{
+    "Cafe0": {
+        "upgrades": {
+            "catTree": {
+                "level": 1,
+                "maxLevel": 4,
+                "levels": {
+                    "2": {
+                        "cost": 100
+                    },
+                    "3": {
+                        "cost": 250
+                    },
+                    "4": {
+                        "cost": 500
+                    }
+                }
+            },
+            "tables": {
+                "level": 1,
+                "maxLevel": 5,
+                "levels": {
+                    "2": {
+                        "cost": 50
+                    },
+                    "3": {
+                        "cost": 300
+                    },
+                    "4": {
+                        "cost": 600
+                    },
+                    "5": {
+                        "cost": 1200
+                    }
+                }
+            },
+            "decor": {
+                "level": 1,
+                "maxLevel": 7,
+                "levels": {
+                    "2": {
+                        "cost": 300
+                    },
+                    "3": {
+                        "cost": 600
+                    },
+                    "4": {
+                        "cost": 600
+                    },
+                    "5": {
+                        "cost": 600
+                    },
+                    "6": {
+                        "cost": 600
+                    },
+                    "7": {
+                        "cost": 600
+                    }
+                }
+            }
+        }
+    }
+}
