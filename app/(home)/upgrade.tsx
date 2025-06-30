@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
         textShadowRadius: 4,
     },
     upgradeContainer: {
-        flex: 0.8,
+        flex: 0.9,
         width: '100%',
         backgroundColor: 'transparent',
         borderRadius: 15,
