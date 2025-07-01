@@ -1,12 +1,14 @@
+export interface CatSpot {
+    x: number;
+    y: number;
+}
+
 export interface UpgradeLevel {
     description: string;
     cost: number;
     icon: any; // Image source
     image: any; // Image source
-    position: {
-        x: number; // x position relative to background (0-100%)
-        y: number; // y position relative to background (0-100%)
-    };
+    catSpots: CatSpot[];
 }
 
 export interface Upgrade {

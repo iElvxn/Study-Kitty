@@ -3,4 +3,6 @@ export interface Cat {
     state: 'sitting' | 'sleeping';
     upgradeCategory: string;
     upgradeLevel: number;
-  }
+    spot: { x: number; y: number };
+    animation: any; // Image source
+}

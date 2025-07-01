@@ -15,21 +15,29 @@ export const CAFES: CafeRecord[] = [
                         cost: 100,
                         icon: require('@/assets/images/upgrades/Cat Tree 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 1.png'),
-                        position: { x: 20, y: 60 }
+                        catSpots: [
+                            {x: 30, y: 280 },
+                            {x: 85, y: 320 },
+                          ],
                     },
                     3: {
                         description: 'A taller cat tree for your cat',
                         cost: 250,
                         icon: require('@/assets/images/upgrades/Cat Tree 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 2.png'),
-                        position: { x: 20, y: 60 }
+                        catSpots: [
+                            {x: 315, y: 550 },
+                          ],
                     },
                     4: {
                         description: 'A double cat tree for your cats to rest on',
                         cost: 500,
                         icon: require('@/assets/images/upgrades/Cat Tree 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 3.png'),
-                        position: { x: 20, y: 60 }
+                        catSpots: [
+                            {x: 40, y: 580 },
+                            {x: 60, y: 625 },
+                          ],
                     }
                 }
             },
@@ -44,28 +52,34 @@ export const CAFES: CafeRecord[] = [
                         cost: 50,
                         icon: require('@/assets/images/upgrades/Table 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 1.png'),
-                        position: { x: 50, y: 70 }
+                        catSpots: [
+                          ],
                     },
                     3: {
-                        description: 'Automatic food dispenser',
+                        description: 'A table for two!',
                         cost: 300,
                         icon: require('@/assets/images/upgrades/Table 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 2.png'),
-                        position: { x: 50, y: 70 }
+                        catSpots: [
+                            {x: 90, y: 490 },
+                          ],
                     },
                     4: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A table for two!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Table 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 3.png'),
-                        position: { x: 50, y: 70 }
+                        catSpots: [
+                            {x: 210, y: 605 },
+                          ],
                     },
                     5: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A cozy little coffee table',
                         cost: 1200,
                         icon: require('@/assets/images/upgrades/Table 4 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 4.png'),
-                        position: { x: 50, y: 70 }
+                        catSpots: [
+                          ],
                     }
                 }
             },
@@ -80,42 +94,48 @@ export const CAFES: CafeRecord[] = [
                         cost: 300,
                         icon: require('@/assets/images/upgrades/Decor 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 1.png'),
-                        position: { x: 80, y: 65 }
-                    },
+                        catSpots: [
+                            {x: 160, y: 455 },
+                          ],                    },
                     3: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'An ottoman for your cats to rest on!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Decor 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 2.png'),
-                        position: { x: 80, y: 65 }
-                    },
+                        catSpots: [
+                            {x: 160, y: 380 },
+                          ],                    },
                     4: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A gray cat bed for your cats to rest on!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Decor 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 3.png'),
-                        position: { x: 80, y: 65 }
-                    },
+                        catSpots: [
+                            {x: 160, y: 700 },
+                          ],                    },
                     5: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A nice welcome mat!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Decor 4 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 4.png'),
-                        position: { x: 80, y: 65 }
-                    },
+                        catSpots: [
+                          ],                    },
                     6: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A nice little ottoman for your cats to rest on!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Decor 5 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 5.png'),
-                        position: { x: 80, y: 65 }
-                    },
+                        catSpots: [
+                            {x: 255, y: 685 },
+                          ],                    },
                     7: {
-                        description: 'Smart food dispenser with portion control',
+                        description: 'A bookshelf for your cats to rest on!',
                         cost: 600,
                         icon: require('@/assets/images/upgrades/Decor 6 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 6.png'),
-                        position: { x: 80, y: 65 }
+                        catSpots: [
+                            {x: 75, y: 740 },
+                          ],                    
                     }
                 }
             }

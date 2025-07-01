@@ -1,4 +1,5 @@
 import { Cat } from '@/app/models/cat';
+import { CatSpot } from '@/app/models/upgrade';
 import { useAuth } from '@clerk/clerk-expo';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -12,18 +13,18 @@ export default function Cats() {
         spawnCat();
     }, [])
 
-    const getCatsOnFurniture = (upgradeCategory: string, upgradeLevel: number) => {
-        return cats.filter(cat => 
-            cat.upgradeCategory === upgradeCategory && 
-            cat.upgradeLevel === upgradeLevel
-        );
-    };
+    // const getCatsOnFurniture = (upgradeCategory: string, upgradeLevel: number) => {
+    //     return cats.filter(cat => 
+    //         cat.upgradeCategory === upgradeCategory && 
+    //         cat.upgradeLevel === upgradeLevel
+    //     );
+    // };
 
-    const hasFurnitureSpace = (upgradeCategory: string, upgradeLevel: number) => {
-        const catsOnFurniture = getCatsOnFurniture(upgradeCategory, upgradeLevel);
-        //const maxCats = getMaxCatsForUpgrade(upgradeCategory);
-        return catsOnFurniture.length < 1//maxCats;
-    };
+    // const hasFurnitureSpace = (upgradeCategory: string, upgradeLevel: number) => {
+    //     const catsOnFurniture = getCatsOnFurniture(upgradeCategory, upgradeLevel);
+    //     //const maxCats = getMaxCatsForUpgrade(upgradeCategory);
+    //     return catsOnFurniture.length < 1//maxCats;
+    // };
 
     const spawnCat = async () => {
         // go through every furniture and find which is available
@@ -36,15 +37,22 @@ export default function Cats() {
         upgradeLevels && Object.entries(upgradeLevels).forEach(([upgradeId, level]) => {
             //
             //console.log("Upgrade ID:", upgradeId, "Level:", level);
-            const availableSpots: { upgradeCategory: string; upgradeLevel: number }[] = [];
+            const availableSpots: CatSpot[] = [];
             // Check each level of this upgrade
-            for (let currentLevel = 1; currentLevel <= level; currentLevel++) {
-                if (hasFurnitureSpace(upgradeId, currentLevel)) {
-                    availableSpots.push({
-                        upgradeCategory: upgradeId,
-                        upgradeLevel: currentLevel,
-                    });
+            for (let currentLevel = 2; currentLevel <= level; currentLevel++) {
+                const upgrade = cafeData.find(u => u.id === upgradeId);
+                if (upgrade) {
+                    const levelData = upgrade.levels[currentLevel];
+                    if (levelData.catSpots) {
+                        availableSpots.push(...levelData.catSpots);
+                    }
                 }
+                // if (hasFurnitureSpace(upgradeId, currentLevel)) {
+                //     availableSpots.push({
+                //         upgradeCategory: upgradeId,
+                //         upgradeLevel: currentLevel,
+                //     });
+                // }
             }
             console.log("Available spots:", availableSpots);
 
