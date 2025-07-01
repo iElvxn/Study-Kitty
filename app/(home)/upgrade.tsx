@@ -167,6 +167,7 @@ const UpgradeScreen = () => {
                             source={require('@/assets/images/coin.png')} 
                             style={styles.coinIconImg}
                             contentFit="contain"
+                            cachePolicy="disk"
                         />
                     </View>
                 )}
