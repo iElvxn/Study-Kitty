@@ -16,8 +16,8 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Cat Tree 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 1.png'),
                         catSpots: [
-                            {x: 30, y: 280 },
-                            {x: 85, y: 320 },
+                            {x: 3, y: 240 },
+                            {x: 55, y: 275 },
                           ],
                     },
                     3: {
@@ -26,7 +26,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Cat Tree 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 2.png'),
                         catSpots: [
-                            {x: 315, y: 550 },
+                            {x: 288, y: 515 },
                           ],
                     },
                     4: {
@@ -35,8 +35,8 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Cat Tree 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 3.png'),
                         catSpots: [
-                            {x: 40, y: 580 },
-                            {x: 60, y: 625 },
+                            {x: 7, y: 550 },
+                            {x: 45, y: 590 },
                           ],
                     }
                 }
@@ -61,7 +61,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Table 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 2.png'),
                         catSpots: [
-                            {x: 90, y: 490 },
+                            {x: 58, y: 445 },
                           ],
                     },
                     4: {
@@ -70,7 +70,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Table 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 3.png'),
                         catSpots: [
-                            {x: 210, y: 605 },
+                            {x: 178, y: 575 },
                           ],
                     },
                     5: {
@@ -95,7 +95,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 1.png'),
                         catSpots: [
-                            {x: 160, y: 455 },
+                            {x: 128, y: 420 },
                           ],                    },
                     3: {
                         description: 'An ottoman for your cats to rest on!',
@@ -103,7 +103,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 2.png'),
                         catSpots: [
-                            {x: 160, y: 380 },
+                            {x: 125, y: 340 },
                           ],                    },
                     4: {
                         description: 'A gray cat bed for your cats to rest on!',
@@ -111,7 +111,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 3.png'),
                         catSpots: [
-                            {x: 160, y: 700 },
+                            {x: 125, y: 665 },
                           ],                    },
                     5: {
                         description: 'A nice welcome mat!',
@@ -126,7 +126,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 5 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 5.png'),
                         catSpots: [
-                            {x: 255, y: 685 },
+                            {x: 220, y: 645 },
                           ],                    },
                     7: {
                         description: 'A bookshelf for your cats to rest on!',
@@ -134,7 +134,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 6 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 6.png'),
                         catSpots: [
-                            {x: 75, y: 740 },
+                            {x: 40, y: 695 },
                           ],                    
                     }
                 }
