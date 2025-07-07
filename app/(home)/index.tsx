@@ -32,7 +32,7 @@ export default function HomeScreen() {
         setUpgrades(mergedUpgrades);
       };
       getUpgradeData();
-    }, [refreshTrigger, getToken])
+    }, [])
   );
 
   const handleUpgradePress = () => {

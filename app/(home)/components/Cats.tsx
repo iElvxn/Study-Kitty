@@ -28,6 +28,7 @@ export default function Cats() {
 
     useEffect(() => {
         //spawnCat();
+        console.log("updating cats")
         testCats();
     }, [])
 
@@ -74,7 +75,7 @@ export default function Cats() {
                     ? reversedCatAnimations[Math.floor(Math.random() * reversedCatAnimations.length)]
                     : catAnimations[Math.floor(Math.random() * catAnimations.length)]
             };
-            setCats([...cats, cat]);
+            setCats(prevCats => [...prevCats, cat]);
         }
     }
 
@@ -121,7 +122,7 @@ export default function Cats() {
             };
             newCats.push(cat);
         }
-        setCats([...cats, ...newCats]);
+        setCats(prevCats => [...prevCats, ...newCats]);
     }
 
     return (
