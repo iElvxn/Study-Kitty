@@ -12,14 +12,16 @@ const catAnimations = [
     require('@/assets/images/cats/Siamese.gif'),
     require('@/assets/images/cats/Tuxedo.gif'),
     require('@/assets/images/cats/White.gif'),
+    require('@/assets/images/cats/Persian.gif'),
 ];
 
 const reversedCatAnimations = [
-    require('@/assets/images/cats/Calico.gif'),
-    require('@/assets/images/cats/Gray Tabby.gif'),
-    require('@/assets/images/cats/Siamese.gif'),
-    require('@/assets/images/cats/Tuxedo.gif'),
-    require('@/assets/images/cats/White.gif'),
+    require('@/assets/images/cats/CalicoReverse.gif'),
+    require('@/assets/images/cats/Gray TabbyReverse.gif'),
+    require('@/assets/images/cats/SiameseReverse.gif'),
+    require('@/assets/images/cats/TuxedoReverse.gif'),
+    require('@/assets/images/cats/WhiteReverse.gif'),
+    require('@/assets/images/cats/PersianReverse.gif'),
 ];
 
 export default function Cats() {
@@ -27,9 +29,23 @@ export default function Cats() {
     const { getToken } = useAuth();
 
     useEffect(() => {
-        //spawnCat();
-        console.log("updating cats")
-        testCats();
+        let isActive = true;
+        
+        const initializeCats = async () => {
+            try {
+                console.log("updating cats");
+                if (!isActive) return;
+                await testCats();
+            } catch (error) {
+                console.error('Error initializing cats:', error);
+            }
+        };
+        
+        initializeCats();
+        
+        return () => {
+            isActive = false;
+        };
     }, [])
 
     const spawnCat = async () => {
@@ -129,7 +145,7 @@ export default function Cats() {
         <View>
             {cats.map((cat, index) => (
                 <Image
-                    key={index}
+                    key={`cat-${cat.spot.x}-${cat.spot.y}-${index}`}
                     source={cat.animation}
                     style={{ position: 'absolute', left: cat.spot.x, top: cat.spot.y, width: 60, height: 60 }}
                     contentFit="contain"

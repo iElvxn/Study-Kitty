@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
-import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from "../aws/client";
 import { getUser, setCachedUserData } from "../aws/users";
@@ -98,20 +98,31 @@ const UpgradeScreen = () => {
     const { triggerRefresh } = useUpgrade();
 
     useEffect(() => {
+        let isActive = true;
+        
         const fetchUpgrades = async () => {
             try {
                 const token = await getToken();
-                if (!token) throw new Error('No token');
+                if (!token || !isActive) return;
                 const userData = await getUser(token);
+                if (!isActive) return;
                 setUser(userData);
                 const upgrades = await getUpgrades(token);
+                if (!isActive) return;
                 setUpgrades(upgrades);
             } catch (err) {
-                setError('Failed to load upgrades');
-                console.error(err);
+                if (isActive) {
+                    setError('Failed to load upgrades');
+                    console.error(err);
+                }
             }
         };
+        
         fetchUpgrades();
+        
+        return () => {
+            isActive = false;
+        };
     }, []);
 
     const handleUpgrade = useCallback(async (upgradeId: string) => {
@@ -152,11 +163,11 @@ const UpgradeScreen = () => {
 
     return (
         <View style={styles.container}>
-            <ImageBackground
+            <Image
                 source={require('@/assets/images/background.jpg')}
                 style={styles.backgroundImage}
-                resizeMode="cover"
-                blurRadius={7}
+                contentFit="cover"
+                cachePolicy="disk"
             />
             <View style={styles.content}>
                 <Text style={styles.title}>Cafe Upgrades</Text>

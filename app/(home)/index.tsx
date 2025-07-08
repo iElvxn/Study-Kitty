@@ -20,24 +20,37 @@ export default function HomeScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let isActive = true;
+      
       const getUpgradeData = async () => {
-        const token = await getToken();
-        if (!token) return;
-        const staticUpgrades = await getUpgrades(token); 
-        const userUpgradeLevels = await fetchUserUpgrades(token);
-        const mergedUpgrades = staticUpgrades.map(upg => ({
-          ...upg,
-          level: userUpgradeLevels?.[upg.id] || 1,
-        }));
-        setUpgrades(mergedUpgrades);
+        try {
+          const token = await getToken();
+          if (!token || !isActive) return;
+          const staticUpgrades = await getUpgrades(token); 
+          const userUpgradeLevels = await fetchUserUpgrades(token);
+          if (!isActive) return;
+          
+          const mergedUpgrades = staticUpgrades.map(upg => ({
+            ...upg,
+            level: userUpgradeLevels?.[upg.id] || 1,
+          }));
+          setUpgrades(mergedUpgrades);
+        } catch (error) {
+          console.error('Error fetching upgrade data:', error);
+        }
       };
+      
       getUpgradeData();
+      
+      return () => {
+        isActive = false;
+      };
     }, [])
   );
 
-  const handleUpgradePress = () => {
+  const handleUpgradePress = useCallback(() => {
     router.push('/upgrade');
-  }
+  }, []);
 
   return (
     <View style={styles.container}>

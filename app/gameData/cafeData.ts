@@ -111,7 +111,7 @@ export const CAFES: CafeRecord[] = [
                         icon: require('@/assets/images/upgrades/Decor 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 3.png'),
                         catSpots: [
-                            {x: 125, y: 665 },
+                            {x: 128, y: 665 },
                           ],                    },
                     5: {
                         description: 'A nice welcome mat!',
