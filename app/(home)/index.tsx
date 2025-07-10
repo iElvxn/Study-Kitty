@@ -21,15 +21,15 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-      
+
       const getUpgradeData = async () => {
         try {
           const token = await getToken();
           if (!token || !isActive) return;
-          const staticUpgrades = await getUpgrades(token); 
+          const staticUpgrades = await getUpgrades(token);
           const userUpgradeLevels = await fetchUserUpgrades(token);
           if (!isActive) return;
-          
+
           const mergedUpgrades = staticUpgrades.map(upg => ({
             ...upg,
             level: userUpgradeLevels?.[upg.id] || 1,
@@ -39,9 +39,9 @@ export default function HomeScreen() {
           console.error('Error fetching upgrade data:', error);
         }
       };
-      
+
       getUpgradeData();
-      
+
       return () => {
         isActive = false;
       };
@@ -60,15 +60,16 @@ export default function HomeScreen() {
         resizeMode="cover"
       />
       <Furniture upgrades={upgrades} />
-      <Cats/>
+      {isTimerActive && <Cats/>}
       <View style={styles.content}>
         <FocusTimer onStateChange={setIsTimerActive} />
       </View>
-      {!isTimerActive ? 
+      {!isTimerActive ?
         <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
           <Text style={styles.upgradeButtonText}>Upgrade Cafe</Text>
         </TouchableOpacity>
-      : null}
+        : null
+      }
     </View>
   );
 }
