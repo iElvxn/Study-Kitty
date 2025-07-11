@@ -41,6 +41,7 @@ export const getUser = async (token: string): Promise<UserRecord> => {
     //try to get cached data first
     const cachedData = await getCachedUserData();
     if (cachedData) {
+        console.log("Getting cache")
         return cachedData;
     }
 
@@ -48,6 +49,7 @@ export const getUser = async (token: string): Promise<UserRecord> => {
     let res = await apiRequest<UserRecord>("/users", "GET", token);
     // cache the fresh data
     await setCachedUserData(res.data);
+    console.log("fetching user data")
     return res.data;
 };
 
@@ -64,20 +66,6 @@ export const createUser = async (token: string, userData?: Partial<UserRecord>):
     
     return res.data;
 };
-
-// PUT /users (update user)
-// export const updateUser = async (token: string, userData: Partial<UserRecord>): Promise<UserRecord> => {
-//     const requestBody = {
-//         userData
-//     };
-    
-//     let res = await apiRequest<UserRecord>(`/users/${userId}`, "PUT", token, requestBody);
-//     
-//     // Update cache with new data
-//     await setCachedUserData(res.data);
-//     
-//     return res.data;
-// };
 
 // Simple function to create user data after authentication
 export const initializeUser = async (token: string): Promise<UserRecord> => {

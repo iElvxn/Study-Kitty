@@ -8,8 +8,8 @@ import { IconSymbol } from './ui/IconSymbol';
 
 const SCREENS = [
   { name: 'Home', route: '/' as const, icon: 'house.fill' as const },
-  { name: 'Explore', route: '/explore' as const, icon: 'paperplane.fill' as const },
-  { name: 'Profile', route: '/profile' as const, icon: 'person.fill' as const },
+  { name: 'Adopt Cats', route: '/adopt' as const, icon: 'paperplane.fill' as const },
+  { name: 'Purrdex', route: '/purrdex' as const, icon: 'person.fill' as const },
 ] as const;
 
 export function ScreenDropdown() {

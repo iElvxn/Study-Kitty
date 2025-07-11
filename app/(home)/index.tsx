@@ -5,7 +5,6 @@ import { useCallback, useState } from 'react';
 import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { Upgrade } from '../models/upgrade';
-import Cats from "./components/Cats";
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
 import { fetchUserUpgrades, getUpgrades } from "./upgrade";
@@ -60,7 +59,7 @@ export default function HomeScreen() {
         resizeMode="cover"
       />
       <Furniture upgrades={upgrades} />
-      {isTimerActive && <Cats/>}
+      {/* {isTimerActive && <Cats/>} */}
       <View style={styles.content}>
         <FocusTimer onStateChange={setIsTimerActive} />
       </View>

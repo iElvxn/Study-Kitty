@@ -1,0 +1,26 @@
+{
+  "catsByRarity": {
+    "common": [
+      "gray-tabby",
+      "white", 
+      "orange-tabby"
+    ],
+    "uncommon": [
+      "calico"
+    ],
+    "rare": [
+      "tuxedo",
+      "siamese"
+    ],
+    "legendary": [
+      "persian"
+    ]
+  },
+  "rarityWeights": {
+    "common": 55,
+    "uncommon": 30,
+    "rare": 13,
+    "legendary": 2
+  },
+  "cost": 100
+} 

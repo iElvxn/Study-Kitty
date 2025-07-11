@@ -5,26 +5,8 @@ import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { fetchUserUpgrades, getUpgrades } from '../upgrade';
+import { CatData } from '@/app/gameData/catData';
 
-const catAnimations = [
-    require('@/assets/images/cats/Calico.gif'),
-    require('@/assets/images/cats/Gray Tabby.gif'),
-    require('@/assets/images/cats/Orange Tabby.gif'),
-    require('@/assets/images/cats/Siamese.gif'),
-    require('@/assets/images/cats/Tuxedo.gif'),
-    require('@/assets/images/cats/White.gif'),
-    require('@/assets/images/cats/Persian.gif'),
-];
-
-const reversedCatAnimations = [
-    require('@/assets/images/cats/CalicoReverse.gif'),
-    require('@/assets/images/cats/Gray TabbyReverse.gif'),
-    require('@/assets/images/cats/Orange TabbyReverse.gif'),
-    require('@/assets/images/cats/SiameseReverse.gif'),
-    require('@/assets/images/cats/TuxedoReverse.gif'),
-    require('@/assets/images/cats/WhiteReverse.gif'),
-    require('@/assets/images/cats/PersianReverse.gif'),
-];
 
 export default function Cats() {
     const [cats, setCats] = useState<Cat[]>([]);
@@ -54,6 +36,7 @@ export default function Cats() {
             try {
                 console.log("Initializing cat cats");
                 if (!isActive) return;
+                //get user cat here because the user's cats shouldnt be changing
                 startInterval();
                 
             } catch (error) {
@@ -102,6 +85,7 @@ export default function Cats() {
             if (availableSpots.length > 0) {
                 const randomSpot = availableSpots[Math.floor(Math.random() * availableSpots.length)];
                 const isReversed = Math.random() < 0.5;
+                //we will have an array of the user's cats
                 const cat: Cat = {
                     state: 'sleeping',
                     spot: randomSpot,
