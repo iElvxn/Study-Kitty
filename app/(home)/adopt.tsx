@@ -1,7 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -15,10 +15,32 @@ import {
   View
 } from 'react-native';
 import { apiRequest } from '../aws/client';
+import { getUser, setCachedUserData } from '../aws/users';
 import { catDataToCat, CATS_BY_RARITY, RARITY_WEIGHTS } from '../gameData/catData';
 import { Cat } from '../models/cat';
 
 const { width, height } = Dimensions.get('window');
+
+// Move utility functions outside component to prevent recreation
+const getRarityColor = (rarity: string): string => {
+  switch (rarity) {
+    case 'common': return '#8B8B8B';
+    case 'uncommon': return '#4CAF50';
+    case 'rare': return '#2196F3';
+    case 'legendary': return '#FFD700';
+    default: return '#8B8B8B';
+  }
+};
+
+const getRarityEmoji = (rarity: string): string => {
+  switch (rarity) {
+    case 'common': return '⚪';
+    case 'uncommon': return '🟢';
+    case 'rare': return '🔵';
+    case 'legendary': return '⭐';
+    default: return '⚪';
+  }
+};
 
 const AdoptScreen: React.FC = () => {
   const { getToken } = useAuth();
@@ -27,55 +49,59 @@ const AdoptScreen: React.FC = () => {
   const [wonCat, setWonCat] = useState<Cat | null>(null);
   const [spinAnimation] = useState(new Animated.Value(0));
   const [pulseAnimation] = useState(new Animated.Value(1));
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    let isActive = true;
+    
+    const fetchUser = async () => {
+        try {
+            const token = await getToken();
+            if (!token) return;
+            const userData = await getUser(token);
+            setUserData(userData);
+        } catch (err) {
+            if (isActive) {
+                console.error("Failed to load data: adopt.tsx");
+            }
+        }
+    };
+    
+    fetchUser();
   
+}, []);
 
-  // Gacha pull logic
-  // const performGachaPull = useCallback(() => {
-  //   const random = Math.random() * 100;
-  //   let cumulativeWeight = 0;
-  //   let selectedRarity: string = 'common';
-
-  //   for (const [rarity, weight] of Object.entries(RARITY_WEIGHTS)) {
-  //     cumulativeWeight += weight;
-  //     if (random <= cumulativeWeight) {
-  //       selectedRarity = rarity;
-  //       break;
-  //     }
-  //   }
-
-  //   const catsOfRarity = CATS_BY_RARITY[selectedRarity];
-  //   const randomCat = catsOfRarity[Math.floor(Math.random() * catsOfRarity.length)];
-
-  //   return catDataToCat(randomCat);
-  // }, []);
-
-  const performGachaPull = async () => {
-    const token = await getToken();
-    if (!token) return;
-    let res = await apiRequest("/adopt", "POST", token);
-    console.log(res.data)
-    console.log(res.data.rarity)
-    console.log(res.data.id)
-    let catData = CATS_BY_RARITY[res.data.rarity].find(({ id }) => id === res.data.id);
-    console.log(catData)
-    return catDataToCat(catData)
-  }
-
-  // Save cat to collection
-  const saveCatToCollection = useCallback(async (cat: Cat) => {
+  const performGachaPull = useCallback(async (): Promise<Cat | null> => {
     try {
-      // TODO: Implement actual saving when backend is ready
-      console.log('Cat would be saved to collection:', cat.name);
-      // const token = await getToken();
-      // if (token) {
-      //   await addCatToCollection(token, cat);
-      //   console.log('Cat saved to collection:', cat.name);
-      // }
+      const token = await getToken();
+      if (!token) {
+        Alert.alert('Error', 'Authentication required');
+        return null;
+      }
+
+      const res = await apiRequest("/adopt", "POST", token);
+
+      // Type guard to ensure res.data has the expected structure
+      if (!res.data || typeof res.data !== 'object' || !('rarity' in res.data) || !('id' in res.data) || !('userData' in res.data)) {
+        throw new Error('Invalid response format');
+      }
+
+      const { rarity, id, userData } = res.data as { rarity: string; id: string; userData: any };
+      setCachedUserData(userData);
+      setUserData(userData);
+      const catData = CATS_BY_RARITY[rarity]?.find(({ id: catId }) => catId === id);
+
+      if (!catData) {
+        throw new Error('Cat data not found');
+      }
+
+      return catDataToCat(catData);
     } catch (error) {
-      console.error('Error saving cat to collection:', error);
-      Alert.alert('Error', 'Failed to save cat to collection. Please try again.');
+      console.error('Error performing gacha pull:', error);
+      Alert.alert('Error', 'Failed to pull for cat. Please try again.');
+      return null;
     }
-  }, []);
+  }, [getToken]);
 
   // Handle gacha pull
   const handleGachaPull = useCallback(async () => {
@@ -98,27 +124,32 @@ const AdoptScreen: React.FC = () => {
     // Simulate gacha pull delay
     setTimeout(async () => {
       const cat = await performGachaPull();
-      setWonCat(cat);
-      setIsSpinning(false);
-      setShowResult(true);
 
-      // Stop the spinning animation
-      spinLoop.stop();
-      spinAnimation.setValue(0);
+      if (cat) {
+        setWonCat(cat);
+        setIsSpinning(false);
+        setShowResult(true);
 
-      // Save cat automatically when won
-      await saveCatToCollection(cat);
+        // Stop the spinning animation
+        spinLoop.stop();
+        spinAnimation.setValue(0);
 
-      // Trigger haptic feedback based on rarity
-      if (cat.rarity === 'legendary') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } else if (cat.rarity === 'rare') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        // Trigger haptic feedback based on rarity
+        if (cat.rarity === 'legendary') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else if (cat.rarity === 'rare') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        } else {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
       } else {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // Handle failed pull
+        setIsSpinning(false);
+        spinLoop.stop();
+        spinAnimation.setValue(0);
       }
     }, 1500);
-  }, [isSpinning, spinAnimation, performGachaPull, saveCatToCollection]);
+  }, [isSpinning, spinAnimation, performGachaPull]);
 
   // Close result modal
   const closeResult = useCallback(() => {
@@ -126,37 +157,18 @@ const AdoptScreen: React.FC = () => {
     setWonCat(null);
   }, []);
 
-  // Get rarity color
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return '#8B8B8B';
-      case 'uncommon': return '#4CAF50';
-      case 'rare': return '#2196F3';
-      case 'legendary': return '#FFD700';
-      default: return '#8B8B8B';
-    }
-  };
+  // Memoize interpolations to prevent recalculation
+  const spinInterpolate = useMemo(() =>
+    spinAnimation.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '360deg'],
+    }), [spinAnimation]);
 
-  // Get rarity emoji
-  const getRarityEmoji = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return '⚪';
-      case 'uncommon': return '🟢';
-      case 'rare': return '🔵';
-      case 'legendary': return '⭐';
-      default: return '⚪';
-    }
-  };
-
-  const spinInterpolate = spinAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const pulseInterpolate = pulseAnimation.interpolate({
-    inputRange: [0, 1, 2],
-    outputRange: [1, 1.1, 1],
-  });
+  const pulseInterpolate = useMemo(() =>
+    pulseAnimation.interpolate({
+      inputRange: [0, 1, 2],
+      outputRange: [1, 1.1, 1],
+    }), [pulseAnimation]);
 
   return (
     <View style={styles.container}>
@@ -174,6 +186,15 @@ const AdoptScreen: React.FC = () => {
             <View style={styles.header}>
               <Text style={styles.title}>Adopt a Cat</Text>
               <Text style={styles.subtitle}>Try your luck at the gacha machine!</Text>
+
+              {/* Coin Display */}
+              <View style={styles.coinContainer}>
+                <Image
+                  source={require('@/assets/images/coin.png')}
+                  style={styles.coinIcon}
+                />
+                <Text style={styles.coinText}>{userData?.coins || 0}</Text>
+              </View>
             </View>
 
             {/* Gacha Machine */}
@@ -231,6 +252,13 @@ const AdoptScreen: React.FC = () => {
                   <Text style={styles.pullButtonText}>
                     {isSpinning ? 'Spinning...' : 'Pull for Cat!'}
                   </Text>
+                  <View style={styles.costContainer}>
+                    <Image 
+                      source={require('@/assets/images/coin.png')} 
+                      style={styles.costIcon} 
+                    />
+                    <Text style={styles.costText}>100</Text>
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -355,6 +383,28 @@ const styles = StyleSheet.create({
     color: '#E6D5BC',
     opacity: 0.9,
     textAlign: 'center',
+    marginBottom: 15,
+  },
+  coinContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 245, 230, 0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(230, 162, 61, 0.9)',
+    marginBottom: -16,
+  },
+  coinIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  coinText: {
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D1810',
   },
   gachaContainer: {
     alignItems: 'center',
@@ -448,6 +498,22 @@ const styles = StyleSheet.create({
   },
   pullButtonText: {
     fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D1810',
+    marginBottom: 4,
+  },
+  costContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  costIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
+  },
+  costText: {
+    fontSize: 14,
     fontFamily: 'Quicksand_700Bold',
     color: '#2D1810',
   },
