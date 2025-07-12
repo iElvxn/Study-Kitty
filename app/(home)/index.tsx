@@ -1,8 +1,9 @@
 import { useAuth } from "@clerk/clerk-expo";
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { Upgrade } from '../models/upgrade';
 import FocusTimer from './components/FocusTimer';
@@ -25,10 +26,11 @@ export default function HomeScreen() {
         try {
           const token = await getToken();
           if (!token || !isActive) return;
-          const staticUpgrades = await getUpgrades(token);
-          const userUpgradeLevels = await fetchUserUpgrades(token);
+          const [staticUpgrades, userUpgradeLevels] = await Promise.all([
+            getUpgrades(token),
+            fetchUserUpgrades(token),
+          ]);
           if (!isActive) return;
-
           const mergedUpgrades = staticUpgrades.map(upg => ({
             ...upg,
             level: userUpgradeLevels?.[upg.id] || 1,
@@ -53,10 +55,11 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
+      <Image
         source={require('@/assets/images/background.jpg')}
         style={styles.backgroundImage}
-        resizeMode="cover"
+        contentFit="contain"
+        cachePolicy="disk"
       />
       <Furniture upgrades={upgrades} />
       {/* {isTimerActive && <Cats/>} */}
