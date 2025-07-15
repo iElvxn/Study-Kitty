@@ -42,6 +42,8 @@ const getRarityEmoji = (rarity: string): string => {
   }
 };
 
+const TIERS: Array<'common' | 'gold' | 'diamond'> = ['common', 'gold', 'diamond'];
+
 const AdoptScreen: React.FC = () => {
   const { getToken } = useAuth();
   const [isSpinning, setIsSpinning] = useState(false);
@@ -50,6 +52,8 @@ const AdoptScreen: React.FC = () => {
   const [spinAnimation] = useState(new Animated.Value(0));
   const [pulseAnimation] = useState(new Animated.Value(1));
   const [userData, setUserData] = useState<any>(null);
+  const [tierIndex, setTierIndex] = useState(0);
+  const selectedTier = TIERS[tierIndex];
 
   useEffect(() => {
     let isActive = true;
@@ -79,7 +83,8 @@ const AdoptScreen: React.FC = () => {
         return null;
       }
 
-      const res = await apiRequest("/adopt", "POST", token);
+      const res = await apiRequest("/adopt", "POST", token, { tier: selectedTier });
+      console.log(selectedTier)
 
       // Type guard to ensure res.data has the expected structure
       if (!res.data || typeof res.data !== 'object' || !('rarity' in res.data) || !('id' in res.data) || !('userData' in res.data)) {
@@ -89,7 +94,7 @@ const AdoptScreen: React.FC = () => {
       const { rarity, id, userData } = res.data as { rarity: string; id: string; userData: any };
       setCachedUserData(userData);
       setUserData(userData);
-      const catData = CATS_BY_RARITY[rarity]?.find(({ id: catId }) => catId === id);
+      const catData = CATS_BY_RARITY[selectedTier]?.[rarity]?.find(({ id: catId }) => catId === id);
 
       if (!catData) {
         throw new Error('Cat data not found');
@@ -101,7 +106,7 @@ const AdoptScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to pull for cat. Please try again.');
       return null;
     }
-  }, [getToken]);
+  }, [getToken, selectedTier]);
 
   // Handle gacha pull
   const handleGachaPull = useCallback(async () => {
@@ -239,6 +244,40 @@ const AdoptScreen: React.FC = () => {
               </View>
 
               {/* Pull Button */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <TouchableOpacity
+                  onPress={() => setTierIndex((prev) => (prev - 1 + TIERS.length) % TIERS.length)}
+                  disabled={tierIndex === 0}
+                  style={{ opacity: tierIndex === 0 ? 0.3 : 1, padding: 10 }}
+                >
+                  <Text style={{ fontSize: 24 }}>{'<'}</Text>
+                </TouchableOpacity>
+                <View style={{
+                  padding: 10,
+                  marginHorizontal: 8,
+                  borderRadius: 10,
+                  backgroundColor: '#A89BD4',
+                  borderWidth: 2,
+                  borderColor: '#6C5B7B',
+                  minWidth: 80,
+                  alignItems: 'center'
+                }}>
+                  <Text style={{
+                    color: '#FFF',
+                    fontWeight: 'bold',
+                    fontSize: 18
+                  }}>
+                    {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setTierIndex((prev) => (prev + 1) % TIERS.length)}
+                  disabled={tierIndex === TIERS.length - 1}
+                  style={{ opacity: tierIndex === TIERS.length - 1 ? 0.3 : 1, padding: 10 }}
+                >
+                  <Text style={{ fontSize: 24 }}>{'>'}</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 style={[styles.pullButton, isSpinning && styles.pullButtonDisabled]}
                 onPress={handleGachaPull}

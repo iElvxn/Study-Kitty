@@ -1,26 +1,55 @@
 {
   "catsByRarity": {
-    "common": [
-      "gray-tabby",
-      "white", 
-      "orange-tabby"
-    ],
-    "uncommon": [
-      "calico"
-    ],
-    "rare": [
-      "tuxedo",
-      "siamese"
-    ],
-    "legendary": [
-      "persian"
-    ]
-  },
-  "rarityWeights": {
-    "common": 55,
-    "uncommon": 30,
-    "rare": 13,
-    "legendary": 2
-  },
-  "cost": 100
-} 
+    "common": {
+      "common": [
+        "white"
+      ],
+      "uncommon": [
+        "orange-tabby"
+      ],
+      "rare": [
+        "tuxedo"
+      ],
+      "legendary": [
+        "siamese"
+      ],
+      "cost": 30
+    },
+    "gold": {
+      "common": [
+        "gray-tabby"
+      ],
+      "uncommon": [
+        "calico"
+      ],
+      "rare": [
+        "bengal"
+      ],
+      "legendary": [
+        "persian"
+      ],
+      "cost": 50
+    },
+    "diamond": {
+      "common": [
+        "gray-tabby"
+      ],
+      "uncommon": [
+        "calico"
+      ],
+      "rare": [
+        "tuxedo"
+      ],
+      "legendary": [
+        "mainecoon"
+      ],
+      "cost": 100
+    },
+    "rarityWeights": {
+      "common": 55,
+      "uncommon": 30,
+      "rare": 13,
+      "legendary": 2
+    }
+  }
+}

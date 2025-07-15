@@ -8,65 +8,123 @@ export interface CatData {
     reverse: any;
 }
 
-export const CATS_BY_RARITY: Record<string, CatData[]> = {
-    common: [
-        {
-            id: 'gray-tabby',
-            name: 'Gray Tabby',
-            rarity: 'common',
-            animation: require('../../assets/images/cats/Gray Tabby.gif'),
-            reverse: require('../../assets/images/cats/Gray TabbyReverse.gif')
-        },
-        {
-            id: 'white',
-            name: 'White',
-            rarity: 'common',
-            animation: require('../../assets/images/cats/White.gif'),
-            reverse: require('../../assets/images/cats/WhiteReverse.gif')
-        },
-        {
-            id: 'orange-tabby',
-            name: 'Orange Tabby',
-            rarity: 'common',
-            animation: require('../../assets/images/cats/Orange Tabby.gif'),
-            reverse: require('../../assets/images/cats/Orange TabbyReverse.gif')
-        }
-    ],
-    uncommon: [
-        {
-            id: 'calico',
-            name: 'Calico',
-            rarity: 'uncommon',
-            animation: require('../../assets/images/cats/Calico.gif'),
-            reverse: require('../../assets/images/cats/CalicoReverse.gif')
-
-        },
-    ],
-    rare: [
-        {
-            id: 'tuxedo',
-            name: 'Tuxedo',
-            rarity: 'rare',
-            animation: require('../../assets/images/cats/Tuxedo.gif'),
-            reverse: require('../../assets/images/cats/TuxedoReverse.gif')
-        },
-        {
-            id: 'siamese',
-            name: 'Siamese',
-            rarity: 'rare',
-            animation: require('../../assets/images/cats/Siamese.gif'),
-            reverse: require('../../assets/images/cats/SiameseReverse.gif')
-        }
-    ],
-    legendary: [
-        {
-            id: 'persian',
-            name: 'Persian',
-            rarity: 'legendary',
-            animation: require('../../assets/images/cats/Persian.gif'),
-            reverse: require('../../assets/images/cats/PersianReverse.gif')
-        }
-    ]
+export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
+    common: {
+        common: [
+            {
+                id: 'white',
+                name: 'White',
+                rarity: 'common',
+                animation: require('../../assets/images/cats/White.gif'),
+                reverse: require('../../assets/images/cats/WhiteReverse.gif')
+            }
+        ],
+        uncommon: [
+            {
+                id: 'orange-tabby',
+                name: 'Orange Tabby',
+                rarity: 'uncommon',
+                animation: require('../../assets/images/cats/Orange Tabby.gif'),
+                reverse: require('../../assets/images/cats/Orange TabbyReverse.gif')
+            }
+        ],
+        rare: [
+            {
+                id: 'tuxedo',
+                name: 'Tuxedo',
+                rarity: 'rare',
+                animation: require('../../assets/images/cats/Tuxedo.gif'),
+                reverse: require('../../assets/images/cats/TuxedoReverse.gif')
+            }
+        ],
+        legendary: [
+            {
+                id: 'siamese',
+                name: 'Siamese',
+                rarity: 'legendary',
+                animation: require('../../assets/images/cats/Siamese.gif'),
+                reverse: require('../../assets/images/cats/SiameseReverse.gif')
+            }
+        ]
+    },
+    gold: {
+        common: [
+            {
+                id: 'gray-tabby',
+                name: 'Gray Tabby',
+                rarity: 'common',
+                animation: require('../../assets/images/cats/Gray Tabby.gif'),
+                reverse: require('../../assets/images/cats/Gray TabbyReverse.gif')
+            },
+        ],
+        uncommon: [
+            {
+                id: 'calico',
+                name: 'Calico',
+                rarity: 'uncommon',
+                animation: require('../../assets/images/cats/Calico.gif'),
+                reverse: require('../../assets/images/cats/CalicoReverse.gif')
+    
+            },
+        ],
+        rare: [
+            {
+                id: 'bengal',
+                name: 'Bengal',
+                rarity: 'rare',
+                animation: require('../../assets/images/cats/Bengal.gif'),
+                reverse: require('../../assets/images/cats/BengalReverse.gif')
+            },
+        ],
+        legendary: [
+            {
+                id: 'persian',
+                name: 'Persian',
+                rarity: 'legendary',
+                animation: require('../../assets/images/cats/Persian.gif'),
+                reverse: require('../../assets/images/cats/PersianReverse.gif')
+            }
+        ]
+    },
+    diamond: {
+        common: [
+            {
+                id: 'gray-tabby',
+                name: 'Gray Tabby',
+                rarity: 'common',
+                animation: require('../../assets/images/cats/Gray Tabby.gif'),
+                reverse: require('../../assets/images/cats/Gray TabbyReverse.gif')
+            }
+        ],
+        uncommon: [
+            {
+                id: 'calico',
+                name: 'Calico',
+                rarity: 'uncommon',
+                animation: require('../../assets/images/cats/Calico.gif'),
+                reverse: require('../../assets/images/cats/CalicoReverse.gif')
+    
+            },
+        ],
+        rare: [
+            {
+                id: 'siamese',
+                name: 'Siamese',
+                rarity: 'rare',
+                animation: require('../../assets/images/cats/Siamese.gif'),
+                reverse: require('../../assets/images/cats/SiameseReverse.gif')
+            }
+        ],
+        legendary: [
+            {
+                id: 'mainecoon',
+                name: 'Maine Coon',
+                rarity: 'legendary',
+                animation: require('../../assets/images/cats/Mainecoon.gif'),
+                reverse: require('../../assets/images/cats/MainecoonReverse.gif')
+            },
+        ]
+    }
 };
 
 // Rarity weights for overall selection
@@ -79,12 +137,14 @@ export const RARITY_WEIGHTS = {
 
 // Helper function to get all cats
 export const getAllCats = (): CatData[] => {
-    return Object.values(CATS_BY_RARITY).flat();
+    return Object.values(CATS_BY_RARITY)
+        .flatMap(rarityObj => Object.values(rarityObj).flat());
 };
 
 // Helper function to get cats by rarity
 export const getCatsByRarity = (rarity: string): CatData[] => {
-    return CATS_BY_RARITY[rarity] || [];
+    return Object.values(CATS_BY_RARITY)
+        .flatMap(rarityObj => rarityObj[rarity] || []);
 };
 
 // Helper function to convert CatData to Cat model
