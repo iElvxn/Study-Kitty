@@ -169,6 +169,7 @@ const UpgradeScreen = () => {
                 contentFit="cover"
                 cachePolicy="disk"
             />
+            <View style={styles.darkOverlay} />
             <View style={styles.content}>
                 <Text style={styles.title}>Cafe Upgrades</Text>
                 {user && (
@@ -227,6 +228,14 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
+    },
+    darkOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
     },
     content: {
         flex: 1,

@@ -4,15 +4,16 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface FocusTimerProps {
   onStateChange?: (isActive: boolean) => void;
+  onSessionTimeChange?: (sessionTime: number) => void;
 }
 
-export default function FocusTimer({ onStateChange }: FocusTimerProps) {
+export default function FocusTimer({ onStateChange, onSessionTimeChange }: FocusTimerProps) {
   const [isActive, setIsActive] = useState(false);
   const [time, setTime] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
 
     if (isActive && time > 0) {
       interval = setInterval(() => {
@@ -32,6 +33,11 @@ export default function FocusTimer({ onStateChange }: FocusTimerProps) {
       }
     };
   }, [isActive, time, initialTime, onStateChange]);
+
+  // Notify parent when session time changes
+  useEffect(() => {
+    onSessionTimeChange?.(initialTime);
+  }, [initialTime, onSessionTimeChange]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);

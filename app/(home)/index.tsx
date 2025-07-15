@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { Upgrade } from '../models/upgrade';
+import Cats from "./components/Cats";
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
 import { fetchUserUpgrades, getUpgrades } from "./upgrade";
@@ -15,6 +16,7 @@ const { width, height } = Dimensions.get('window');
 export default function HomeScreen() {
   const { getToken } = useAuth();
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [sessionTime, setSessionTime] = useState(25 * 60);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
   const { refreshTrigger } = useUpgrade();
 
@@ -62,9 +64,9 @@ export default function HomeScreen() {
         cachePolicy="disk"
       />
       <Furniture upgrades={upgrades} />
-      {/* {isTimerActive && <Cats/>} */}
+      {isTimerActive && <Cats sessionTime={sessionTime} />}
       <View style={styles.content}>
-        <FocusTimer onStateChange={setIsTimerActive} />
+        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} />
       </View>
       {!isTimerActive ?
         <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
