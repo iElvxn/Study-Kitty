@@ -56,8 +56,9 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 // Get users cats
                 const token = await getToken();
                 if (!token || !isActive) return;
-
+                
                 const userData = await getUser(token);
+
                 const cafeData = await getUpgrades(token)
                 const upgradeLevels = await fetchUserUpgrades(token);
 
@@ -87,25 +88,29 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                         quantity: data.quantity
                     };
                 });
-
+                
                 setUserCats(catsArray);
-
+                
                 // Pre-filter owned cats for optimal random selection
                 const ownedCatsArray = catsArray.filter(cat => Number(cat.quantity) > 0);
                 setOwnedCats(ownedCatsArray);
                 ownedCatsRef.current = ownedCatsArray; // Update ref
-
-
+                
                 // Start the cat spawning intervals
                 startInterval();
-
+                
+                // Spawn first cat immediately
+                setTimeout(() => {
+                    spawnCat();
+                }, 100);
+                
             } catch (error) {
                 console.error('Error initializing cats:', error);
             }
         };
-
+        
         initializeCats();
-
+        
         return () => {
             isActive = false;
             stopInterval();
