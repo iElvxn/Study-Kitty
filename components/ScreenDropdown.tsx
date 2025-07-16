@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import { useTimer } from '@/context/TimerContext';
 import { SignOutButton } from './SignOutButton';
 import { ThemedText } from './ThemedText';
 import { IconSymbol } from './ui/IconSymbol';
@@ -13,6 +14,8 @@ const SCREENS = [
 ] as const;
 
 export function ScreenDropdown() {
+  const { isTimerActive } = useTimer();
+  if (isTimerActive) return null;
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 

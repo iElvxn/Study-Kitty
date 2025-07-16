@@ -4,7 +4,7 @@ export interface CatData {
     id: string;
     name: string;
     rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
-    animation: any; 
+    animation: any;
     reverse: any;
 }
 
@@ -39,12 +39,12 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
         ],
         legendary: [
             {
-                id: 'siamese',
-                name: 'Siamese',
+                id: 'persian',
+                name: 'Persian',
                 rarity: 'legendary',
-                animation: require('../../assets/images/cats/Siamese.gif'),
-                reverse: require('../../assets/images/cats/SiameseReverse.gif')
-            }
+                animation: require('../../assets/images/cats/Persian.gif'),
+                reverse: require('../../assets/images/cats/PersianReverse.gif')
+            },
         ]
     },
     gold: {
@@ -64,7 +64,7 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
                 rarity: 'uncommon',
                 animation: require('../../assets/images/cats/Calico.gif'),
                 reverse: require('../../assets/images/cats/CalicoReverse.gif')
-    
+
             },
         ],
         rare: [
@@ -78,50 +78,51 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
         ],
         legendary: [
             {
-                id: 'persian',
-                name: 'Persian',
+                id: 'classy',
+                name: 'Classy',
                 rarity: 'legendary',
-                animation: require('../../assets/images/cats/Persian.gif'),
-                reverse: require('../../assets/images/cats/PersianReverse.gif')
+                animation: require('../../assets/images/cats/Classy.gif'),
+                reverse: require('../../assets/images/cats/ClassyReverse.gif')
             }
         ]
     },
     diamond: {
         common: [
             {
-                id: 'gray-tabby',
-                name: 'Gray Tabby',
-                rarity: 'common',
-                animation: require('../../assets/images/cats/Gray Tabby.gif'),
-                reverse: require('../../assets/images/cats/Gray TabbyReverse.gif')
-            }
-        ],
-        uncommon: [
-            {
-                id: 'calico',
-                name: 'Calico',
-                rarity: 'uncommon',
-                animation: require('../../assets/images/cats/Calico.gif'),
-                reverse: require('../../assets/images/cats/CalicoReverse.gif')
-    
-            },
-        ],
-        rare: [
-            {
                 id: 'siamese',
                 name: 'Siamese',
-                rarity: 'rare',
+                rarity: 'common',
                 animation: require('../../assets/images/cats/Siamese.gif'),
                 reverse: require('../../assets/images/cats/SiameseReverse.gif')
             }
         ],
-        legendary: [
+        uncommon: [
+            {
+                id: 'ragdoll',
+                name: 'Ragdoll',
+                rarity: 'uncommon',
+                animation: require('../../assets/images/cats/Ragdoll.gif'),
+                reverse: require('../../assets/images/cats/RagdollReverse.gif')
+
+            },
+        ],
+        rare: [
+
             {
                 id: 'mainecoon',
                 name: 'Maine Coon',
-                rarity: 'legendary',
+                rarity: 'rare',
                 animation: require('../../assets/images/cats/Mainecoon.gif'),
                 reverse: require('../../assets/images/cats/MainecoonReverse.gif')
+            },
+        ],
+        legendary: [
+            {
+                id: 'cherry-blossom-calico',
+                name: 'Cherry Blossom Calico',
+                rarity: 'legendary',
+                animation: require('../../assets/images/cats/Cherry Blossom Calico.gif'),
+                reverse: require('../../assets/images/cats/Cherry Blossom CalicoReverse.gif')
             },
         ]
     }

@@ -11,7 +11,7 @@
         "tuxedo"
       ],
       "legendary": [
-        "siamese"
+        "persian"
       ],
       "cost": 30
     },
@@ -26,22 +26,22 @@
         "bengal"
       ],
       "legendary": [
-        "persian"
+        "classy"
       ],
       "cost": 50
     },
     "diamond": {
       "common": [
-        "gray-tabby"
+        "siamese"
       ],
       "uncommon": [
-        "calico"
+        "ragdoll"
       ],
       "rare": [
-        "tuxedo"
+        "mainecoon"
       ],
       "legendary": [
-        "mainecoon"
+        "cherry-blossom-calico"
       ],
       "cost": 100
     },

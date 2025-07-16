@@ -18,7 +18,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const [userCats, setUserCats] = useState<CatRecord[]>([]);
     const [ownedCats, setOwnedCats] = useState<CatRecord[]>([]);
     const [cats, setCats] = useState<Cat[]>([]);
-    const [spots, setSpots] = useState<CatSpot[]>([]);
+    const [spots, setSpots] = useState<CatSpot[]>([{x: 150, y: 150}]);
     const { getToken } = useAuth();
     const intervalRef = useRef<number | null>(null);
     const ownedCatsRef = useRef<CatRecord[]>([]);
@@ -31,7 +31,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
         
         // Calculate spawn interval: session length / total cat spots
         const totalSpots = spotsRef.current.length;
-        const spawnInterval = totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
+        const spawnInterval = 100//totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
         
         console.log(`Session length: ${sessionTime}s, Total spots: ${totalSpots}, Spawn interval: ${spawnInterval}ms`);
         
@@ -62,14 +62,23 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 const cafeData = await getUpgrades(token)
                 const upgradeLevels = await fetchUserUpgrades(token);
 
-                let spots: CatSpot[] = [];
+                let spots: CatSpot[] = [
+                    { x: 255, y: 280 },
+                    { x: 215, y: 335 },
+                    { x: 212, y: 440 },
+                ];
                 upgradeLevels && Object.entries(upgradeLevels).forEach(([upgradeId, level]) => {
                     for (let currentLevel = 2; currentLevel <= (level as any); currentLevel++) {
                         const upgrade = cafeData.find(u => u.id === upgradeId);
                         if (upgrade) {
                             const levelData = upgrade.levels[currentLevel];
                             if (levelData.catSpots) {
-                                spots.push(...levelData.catSpots);
+                                // Only add spots that are not already in the array
+                                levelData.catSpots.forEach(newSpot => {
+                                    if (!spots.some(s => s.x === newSpot.x && s.y === newSpot.y)) {
+                                        spots.push(newSpot);
+                                    }
+                                });
                             }
                         }
                     }
@@ -120,7 +129,6 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const spawnCat = async () => {
         // Use setCats to get the latest cats state
         setCats(currentCats => {
-            console.log("spots from ref:", spotsRef.current);
             const occupiedSpots = currentCats.map(cat => cat.spot);
             const availableSpots = spotsRef.current.filter(spot =>
                 !occupiedSpots.some(occupied =>
@@ -134,7 +142,6 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
 
                 // Get owned cats from ref to avoid timing issues
                 const currentOwnedCats = ownedCatsRef.current;
-                console.log("Using owned cats from ref:", currentOwnedCats);
 
                 if (currentOwnedCats.length === 0) {
                     console.log("No owned cats available in ref");

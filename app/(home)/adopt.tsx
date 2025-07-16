@@ -95,7 +95,7 @@ const AdoptScreen: React.FC = () => {
       setCachedUserData(userData);
       setUserData(userData);
       const catData = CATS_BY_RARITY[selectedTier]?.[rarity]?.find(({ id: catId }) => catId === id);
-
+      console.log(id, rarity)
       if (!catData) {
         throw new Error('Cat data not found');
       }

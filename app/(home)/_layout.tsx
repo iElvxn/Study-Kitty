@@ -1,4 +1,5 @@
 import { ScreenDropdown } from '@/components/ScreenDropdown';
+import { TimerProvider } from '@/context/TimerContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
@@ -34,7 +35,7 @@ export default function AuthRoutesLayout() {
   }
 
   return (
-    <>
+    <TimerProvider>
       <ScreenDropdown />
       <Stack
         screenOptions={{
@@ -42,6 +43,6 @@ export default function AuthRoutesLayout() {
           animation: 'slide_from_right',
         }}
       />
-    </>
+    </TimerProvider>
   );
 }

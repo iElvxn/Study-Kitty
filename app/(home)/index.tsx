@@ -1,3 +1,4 @@
+import { useTimer } from '@/context/TimerContext';
 import { useAuth } from "@clerk/clerk-expo";
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
@@ -15,7 +16,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { getToken } = useAuth();
-  const [isTimerActive, setIsTimerActive] = useState(false);
+  const { isTimerActive, setIsTimerActive } = useTimer();
   const [sessionTime, setSessionTime] = useState(25 * 60);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
   const { refreshTrigger } = useUpgrade();
