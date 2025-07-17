@@ -4,7 +4,7 @@ import { apiRequest } from "./client";
 
 const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
-const getCachedUserData = async (): Promise<UserRecord | null> => {
+export const getCachedUserData = async (): Promise<UserRecord | null> => {
     const cached = await AsyncStorage.getItem("userData");
     if (!cached) return null;
     

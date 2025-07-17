@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { apiRequest } from '../aws/client';
 import { getUser, setCachedUserData } from '../aws/users';
-import { catDataToCat, CATS_BY_RARITY, RARITY_WEIGHTS } from '../gameData/catData';
+import { catDataToCat, CATS_BY_RARITY, getTierCost, RARITY_WEIGHTS } from '../gameData/catData';
 import { Cat } from '../models/cat';
 
 const { width, height } = Dimensions.get('window');
@@ -205,10 +205,6 @@ const AdoptScreen: React.FC = () => {
             {/* Gacha Machine */}
             <View style={styles.gachaContainer}>
               <View style={styles.machineBody}>
-                <LinearGradient
-                  colors={['#2D1810', '#4A2C1A', '#2D1810']}
-                  style={styles.machineGradient}
-                >
                   <View style={styles.machineTop}>
                     <View style={styles.machineWindow}>
                       <Animated.View
@@ -226,21 +222,6 @@ const AdoptScreen: React.FC = () => {
                       </Animated.View>
                     </View>
                   </View>
-
-                  <View style={styles.machineBottom}>
-                    <View style={styles.leverContainer}>
-                      <View style={styles.lever} />
-                      <Animated.View
-                        style={[
-                          styles.leverHandle,
-                          {
-                            transform: [{ scale: pulseInterpolate }],
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                </LinearGradient>
               </View>
 
               {/* Pull Button */}
@@ -248,34 +229,27 @@ const AdoptScreen: React.FC = () => {
                 <TouchableOpacity
                   onPress={() => setTierIndex((prev) => (prev - 1 + TIERS.length) % TIERS.length)}
                   disabled={tierIndex === 0}
-                  style={{ opacity: tierIndex === 0 ? 0.3 : 1, padding: 10 }}
+                  style={[
+                    styles.tierButton,
+                    { opacity: tierIndex === 0 ? 0.3 : 1 }
+                  ]}
                 >
-                  <Text style={{ fontSize: 24 }}>{'<'}</Text>
+                  <Text style={styles.tierButtonText}>{'<'}</Text>
                 </TouchableOpacity>
-                <View style={{
-                  padding: 10,
-                  marginHorizontal: 8,
-                  borderRadius: 10,
-                  backgroundColor: '#A89BD4',
-                  borderWidth: 2,
-                  borderColor: '#6C5B7B',
-                  minWidth: 80,
-                  alignItems: 'center'
-                }}>
-                  <Text style={{
-                    color: '#FFF',
-                    fontWeight: 'bold',
-                    fontSize: 18
-                  }}>
+                <View style={styles.tierDisplay}>
+                  <Text style={styles.tierDisplayText}>
                     {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)}
                   </Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => setTierIndex((prev) => (prev + 1) % TIERS.length)}
                   disabled={tierIndex === TIERS.length - 1}
-                  style={{ opacity: tierIndex === TIERS.length - 1 ? 0.3 : 1, padding: 10 }}
+                  style={[
+                    styles.tierButton,
+                    { opacity: tierIndex === TIERS.length - 1 ? 0.3 : 1 }
+                  ]}
                 >
-                  <Text style={{ fontSize: 24 }}>{'>'}</Text>
+                  <Text style={styles.tierButtonText}>{'>'}</Text>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity
@@ -285,7 +259,7 @@ const AdoptScreen: React.FC = () => {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={isSpinning ? ['#666', '#888'] : ['#C7B6F5', '#A89BD4']}
+                  colors={isSpinning ? ['#666', '#888'] : ['#B6917E', '#8B6B5A']}
                   style={styles.pullButtonGradient}
                 >
                   <Text style={styles.pullButtonText}>
@@ -296,7 +270,7 @@ const AdoptScreen: React.FC = () => {
                       source={require('@/assets/images/coin.png')} 
                       style={styles.costIcon} 
                     />
-                    <Text style={styles.costText}>100</Text>
+                    <Text style={styles.costText}>{getTierCost(selectedTier)}</Text>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -387,7 +361,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     height: "100%",
-
   },
   backgroundImage: {
     position: 'absolute',
@@ -400,16 +373,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+    paddingTop: 60,
     justifyContent: 'space-between',
   },
   header: {
     alignItems: 'center',
-    marginTop: 60,
     marginBottom: 40,
   },
   title: {
-    fontSize: 36,
     fontFamily: 'Quicksand_700Bold',
+    fontSize: 32,
+    fontWeight: 'bold',
     color: '#FFF5E6',
     textShadowColor: '#000000',
     textShadowOffset: { width: 2, height: 2 },
@@ -417,23 +391,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
+    color: '#F9E4BC',
+    marginTop: 5,
     fontFamily: 'Quicksand_500Medium',
-    color: '#E6D5BC',
-    opacity: 0.9,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
     textAlign: 'center',
     marginBottom: 15,
   },
   coinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 245, 230, 0.9)',
+    backgroundColor: 'rgba(255, 245, 230, 0.95)',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(230, 162, 61, 0.9)',
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
     marginBottom: -16,
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   coinIcon: {
     width: 24,
@@ -451,15 +433,14 @@ const styles = StyleSheet.create({
   },
   machineBody: {
     width: 280,
-    height: 320,
-    marginBottom: 30,
+    height: 280,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   machineGradient: {
     flex: 1,
@@ -471,12 +452,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   machineWindow: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 220,
+    height: 220,
+    borderRadius: 220,
+    backgroundColor: 'rgba(238, 192, 123, 0.15)',
     borderWidth: 3,
-    borderColor: '#FFF5E6',
+    borderColor: 'rgb(245, 192, 143)',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -507,25 +488,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5E6',
     borderRadius: 2,
   },
-  leverHandle: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#C7B6F5',
-    borderRadius: 10,
-    marginLeft: 8,
-    borderWidth: 2,
-    borderColor: '#FFF5E6',
-  },
+
   pullButton: {
     width: 200,
-    height: 50,
+    height: 60,
     borderRadius: 25,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: '#2D1810',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 5,
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
   },
   pullButtonDisabled: {
     opacity: 0.6,
@@ -557,12 +532,17 @@ const styles = StyleSheet.create({
     color: '#2D1810',
   },
   rarityInfo: {
-    backgroundColor: 'rgba(255, 245, 230, 0.9)',
+    backgroundColor: 'rgba(255, 245, 230, 0.95)',
     borderRadius: 20,
     padding: 18,
     marginBottom: 40,
-    borderWidth: 5,
-    borderColor: '#B6917E',
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
   rarityTitle: {
     fontSize: 22,
@@ -603,11 +583,13 @@ const styles = StyleSheet.create({
     maxWidth: 350,
     borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: '#2D1810',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
   },
   modalGradient: {
     padding: 30,
@@ -630,7 +612,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 245, 230, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -654,12 +636,12 @@ const styles = StyleSheet.create({
   rarityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 245, 230, 0.7)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E6D5BC',
+    borderColor: '#B6917E',
   },
   rarityBadgeEmoji: {
     fontSize: 16,
@@ -674,6 +656,8 @@ const styles = StyleSheet.create({
     height: 45,
     borderRadius: 22.5,
     overflow: 'hidden',
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
   },
   closeButtonGradient: {
     flex: 1,
@@ -684,6 +668,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Quicksand_700Bold',
     color: '#FFF5E6',
+  },
+  tierButton: {
+    padding: 12,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 245, 230, 0.95)',
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
+    minWidth: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tierButtonText: {
+    fontSize: 20,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D1810',
+  },
+  tierDisplay: {
+    padding: 12,
+    marginHorizontal: 8,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 245, 230, 0.95)',
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
+    minWidth: 120,
+    alignItems: 'center',
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tierDisplayText: {
+    color: '#2D1810',
+    fontFamily: 'Quicksand_700Bold',
+    fontSize: 16,
   },
 });
 

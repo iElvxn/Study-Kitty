@@ -136,6 +136,16 @@ export const RARITY_WEIGHTS = {
     legendary: 2
 };
 
+// Helper function to get cost for a tier
+export const getTierCost = (tier: string): number => {
+    switch (tier) {
+        case 'common': return 30;
+        case 'gold': return 50;
+        case 'diamond': return 100;
+        default: return 100;
+    }
+};
+
 // Helper function to get all cats
 export const getAllCats = (): CatData[] => {
     return Object.values(CATS_BY_RARITY)

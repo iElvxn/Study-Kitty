@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
+import { apiRequest } from '../aws/client';
+import { getCachedUserData, setCachedUserData } from '../aws/users';
 import { Upgrade } from '../models/upgrade';
 import Cats from "./components/Cats";
 import FocusTimer from './components/FocusTimer';
@@ -56,6 +58,28 @@ export default function HomeScreen() {
     router.push('/upgrade');
   }, []);
 
+  const handleCoinReward = async () => {
+    try {
+      const token = await getToken();
+      if (!token) {
+        console.log("No token?");
+        return;
+      }
+      const res = await apiRequest("/coins", "POST", token, { sessionDuration: sessionTime });
+      const newBalance = res.data.newBalance; 
+
+      // Update the cache:
+      const cachedUser = await getCachedUserData();
+      if (cachedUser) {
+        const updatedUser = { ...cachedUser, coins: newBalance };
+        await setCachedUserData(updatedUser);
+      }
+      console.log(res);
+    } catch (error) {
+      console.log("Error in handleCoinReward:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -67,7 +91,7 @@ export default function HomeScreen() {
       <Furniture upgrades={upgrades} />
       {isTimerActive && <Cats sessionTime={sessionTime} />}
       <View style={styles.content}>
-        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} />
+        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} onComplete={handleCoinReward} />
       </View>
       {!isTimerActive ?
         <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>

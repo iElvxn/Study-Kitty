@@ -31,7 +31,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
         
         // Calculate spawn interval: session length / total cat spots
         const totalSpots = spotsRef.current.length;
-        const spawnInterval = 100//totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
+        const spawnInterval = totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
         
         console.log(`Session length: ${sessionTime}s, Total spots: ${totalSpots}, Spawn interval: ${spawnInterval}ms`);
         

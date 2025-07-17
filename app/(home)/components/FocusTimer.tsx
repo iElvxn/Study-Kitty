@@ -5,9 +5,10 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface FocusTimerProps {
   onStateChange?: (isActive: boolean) => void;
   onSessionTimeChange?: (sessionTime: number) => void;
+  onComplete?: () => void;
 }
 
-export default function FocusTimer({ onStateChange, onSessionTimeChange }: FocusTimerProps) {
+export default function FocusTimer({ onStateChange, onSessionTimeChange, onComplete }: FocusTimerProps) {
   const [isActive, setIsActive] = useState(false);
   const [time, setTime] = useState(25 * 60);
   const [initialTime, setInitialTime] = useState(25 * 60);
@@ -15,10 +16,16 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange }: Focus
   useEffect(() => {
     let interval: number;
 
+    //count down the seconds
     if (isActive && time > 0) {
       interval = setInterval(() => {
         setTime((prevTime) => prevTime - 1);
       }, 1000);
+    } else if (isActive && time === 0) {
+      // Timer completed!
+      onComplete?.(); // Call the callback
+      setIsActive(false);
+      setTime(initialTime);
     } else {
       setIsActive(false);
       setTime(initialTime);
@@ -32,7 +39,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange }: Focus
         clearInterval(interval);
       }
     };
-  }, [isActive, time, initialTime, onStateChange]);
+  }, [isActive, time, initialTime, onStateChange, onComplete]);
 
   // Notify parent when session time changes
   useEffect(() => {
