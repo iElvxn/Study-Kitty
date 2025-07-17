@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from '../aws/client';
 import { getCachedUserData, setCachedUserData } from '../aws/users';
@@ -22,6 +22,19 @@ export default function HomeScreen() {
   const [sessionTime, setSessionTime] = useState(25 * 60);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
   const { refreshTrigger } = useUpgrade();
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [earnedAmount, setEarnedAmount] = useState(0);
+
+
+  const completionQuotes: String[] = [
+    "Paws and reflect, session complete! 🐾",
+    "You stayed pawsitive and nailed it! 🎉",
+    "Purr-sistence pays off! You did it! 🐾",
+    "Another chill study sesh in the catfe. ☕🐱",
+    "Meow-gnificent focus! Time for a stretch? 🐈‍⬛"
+  ]
+
+  const [modalQuote, setModalQuote] = useState(completionQuotes[0]);
 
   useFocusEffect(
     useCallback(() => {
@@ -31,14 +44,15 @@ export default function HomeScreen() {
         try {
           const token = await getToken();
           if (!token || !isActive) return;
-          const [staticUpgrades, userUpgradeLevels] = await Promise.all([
+          const [staticUpgrades, userUpgradeLevelsRaw] = await Promise.all([
             getUpgrades(token),
             fetchUserUpgrades(token),
           ]);
+          const userUpgradeLevels: Record<string, number> = (userUpgradeLevelsRaw && typeof userUpgradeLevelsRaw === 'object' && !Array.isArray(userUpgradeLevelsRaw)) ? userUpgradeLevelsRaw as Record<string, number> : {};
           if (!isActive) return;
           const mergedUpgrades = staticUpgrades.map(upg => ({
             ...upg,
-            level: userUpgradeLevels?.[upg.id] || 1,
+            level: userUpgradeLevels[upg.id] || 1,
           }));
           setUpgrades(mergedUpgrades);
         } catch (error) {
@@ -66,7 +80,14 @@ export default function HomeScreen() {
         return;
       }
       const res = await apiRequest("/coins", "POST", token, { sessionDuration: sessionTime });
-      const newBalance = res.data.newBalance; 
+      const data = res.data as { newBalance: number; coinsAwarded: number };
+      const newBalance = data.newBalance; 
+
+      setEarnedAmount(data.coinsAwarded);
+      // Pick a random quote for the modal
+      const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
+      setModalQuote(completionQuotes[randomIdx]);
+      setShowRewardModal(true);
 
       // Update the cache:
       const cachedUser = await getCachedUserData();
@@ -74,7 +95,6 @@ export default function HomeScreen() {
         const updatedUser = { ...cachedUser, coins: newBalance };
         await setCachedUserData(updatedUser);
       }
-      console.log(res);
     } catch (error) {
       console.log("Error in handleCoinReward:", error);
     }
@@ -99,6 +119,34 @@ export default function HomeScreen() {
         </TouchableOpacity>
         : null
       }
+      {/* Reward Modal */}
+      <Modal
+        visible={showRewardModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowRewardModal(false)}
+        accessible
+        accessibilityViewIsModal
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{modalQuote}</Text>
+            <Text style={styles.modalText}>Studied for {sessionTime/60} minutes</Text>
+            <Text style={styles.modalText}>You earned</Text>
+            <View style={styles.coinRow}>
+              <Image source={require('@/assets/images/coin.png')} style={styles.coinIcon} />
+              <Text style={styles.earnedAmount}>{earnedAmount}</Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.closeButton, pressed && { opacity: 0.7 }]}
+              onPress={() => setShowRewardModal(false)}
+              accessibilityLabel="Close reward modal"
+            >
+              <Text style={styles.closeButtonText}>Yay!</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -132,5 +180,69 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Quicksand_500Medium',
     opacity: 0.9,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: 350,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#FFF5E6',
+    alignItems: 'center',
+    padding: 30,
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D1810',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 20,
+    color: '#2D1810',
+    marginBottom: 10,
+    fontFamily: 'Quicksand_500Medium',
+  },
+  coinRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  coinIcon: {
+    width: 34,
+    height: 34,
+    marginRight: 8,
+  },
+  earnedAmount: {
+    fontSize: 32,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#B6917E',
+  },
+  closeButton: {
+    backgroundColor: '#B6917E',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#FFF5E6',
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
   },
 }); 
