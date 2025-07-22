@@ -1,9 +1,714 @@
-import { Text, View } from 'react-native';
+import { useAuth } from '@clerk/clerk-expo';
+import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useCallback, useState } from 'react';
+import {
+    Dimensions,
+    FlatList,
+    ImageBackground,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import { LineChart, PieChart } from 'react-native-chart-kit';
+import { getUser } from '../aws/users';
+import { UserRecord } from '../models/user';
+
+const { width } = Dimensions.get('window');
+
+type TimePeriod = 'day' | 'week' | 'month' | 'year';
+
+interface StatCard {
+  title: string;
+  value: string;
+  subtitle?: string;
+  color: string;
+}
 
 export default function Statistics() {
+  const { getToken } = useAuth();
+  const [userData, setUserData] = useState<UserRecord | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('week');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      const fetchUserData = async () => {
+        try {
+          const token = await getToken();
+          if (!token || !isActive) return;
+
+          const user = await getUser(token);
+          if (isActive) {
+            setUserData(user);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        } finally {
+          if (isActive) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchUserData();
+
+      return () => {
+        isActive = false;
+      };
+    }, [])
+  );
+
+  const productivity = userData?.productivity;
+
+  // Get available tags from recent sessions
+  const getAvailableTags = (): string[] => {
+    if (!productivity?.recentSessions) return [];
+    
+    const tags = new Set<string>();
+    productivity.recentSessions.forEach(session => {
+      if (session.tag && session.tag.trim()) {
+        tags.add(session.tag);
+      }
+    });
+    return Array.from(tags);
+  };
+
+  // Get data for selected time period
+  const getTimeSeriesData = () => {
+    if (!productivity) return { labels: [], datasets: [{ data: [] }] };
+
+    const now = new Date();
+    const labels: string[] = [];
+    const data: number[] = [];
+
+    if (selectedPeriod === 'day') {
+      // Current day - show hourly breakdown (or sessions if no hourly data)
+      const today = now.toISOString().split('T')[0];
+      const todayStats = productivity.dailyStats[today];
+      
+      if (todayStats && productivity.recentSessions) {
+        // Get today's sessions and group by hour
+        const todaySessions = productivity.recentSessions.filter(session => 
+          session.date === today
+        );
+        
+        const hourlyData: Record<number, number> = {};
+        
+        // Initialize all hours to 0
+        for (let hour = 0; hour < 24; hour++) {
+          hourlyData[hour] = 0;
+        }
+        
+        // Aggregate sessions by hour
+        todaySessions.forEach(session => {
+          const startHour = new Date(session.startTime).getHours();
+          const minutes = Math.floor(session.sessionDuration / 60);
+          
+          // Filter by tag if selected
+          if (!selectedTag || session.tag === selectedTag) {
+            hourlyData[startHour] += minutes;
+          }
+        });
+        
+        // Only show hours with data or around current time
+        const currentHour = now.getHours();
+        const startHour = Math.max(0, currentHour - 6);
+        const endHour = Math.min(23, currentHour + 6);
+        
+        for (let hour = startHour; hour <= endHour; hour++) {
+          labels.push(`${hour.toString().padStart(2, '0')}:00`);
+          data.push(hourlyData[hour]);
+        }
+      } else {
+        // Fallback: just show today's total
+        labels.push('Today');
+        let minutes = todayStats?.totalMinutes || 0;
+        if (selectedTag && todayStats?.tags) {
+          minutes = todayStats.tags[selectedTag] || 0;
+        }
+        data.push(minutes);
+      }
+    } else if (selectedPeriod === 'week') {
+      // Current week - show 7 days of current week
+      const startOfWeek = new Date(now);
+      const dayOfWeek = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Monday start
+      startOfWeek.setDate(diff);
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+        
+        const dayStats = productivity.dailyStats[dateStr];
+        let minutes = dayStats?.totalMinutes || 0;
+        
+        if (selectedTag && dayStats?.tags) {
+          minutes = dayStats.tags[selectedTag] || 0;
+        }
+        
+        data.push(minutes);
+      }
+    } else if (selectedPeriod === 'month') {
+      // Current month - show weeks of current month
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      // Find first Monday of the month (or before)
+      const firstMonday = new Date(startOfMonth);
+      const dayOfWeek = firstMonday.getDay();
+      const diff = firstMonday.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      firstMonday.setDate(diff);
+      
+      let weekStart = new Date(firstMonday);
+      let weekNumber = 1;
+      
+      while (weekStart <= endOfMonth) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        // Calculate week key
+        const startOfYear = new Date(weekStart.getFullYear(), 0, 1);
+        const weekNum = Math.ceil(((weekStart.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+        const weekKey = `${weekStart.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+        
+        labels.push(`Week ${weekNumber}`);
+        
+        const weekStats = productivity.weeklyStats[weekKey];
+        let minutes = weekStats?.totalMinutes || 0;
+        
+        if (selectedTag && weekStats?.tags) {
+          minutes = weekStats.tags[selectedTag] || 0;
+        }
+        
+        data.push(minutes);
+        
+        weekStart.setDate(weekStart.getDate() + 7);
+        weekNumber++;
+        
+        // Safety break
+        if (weekNumber > 6) break;
+      }
+    } else {
+      // Current year - show 12 months of current year
+      const currentYear = now.getFullYear();
+      
+      for (let month = 0; month < 12; month++) {
+        const monthKey = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
+        const monthDate = new Date(currentYear, month, 1);
+        
+        labels.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
+        
+        const monthStats = productivity.monthlyStats[monthKey];
+        let minutes = monthStats?.totalMinutes || 0;
+        
+        if (selectedTag && monthStats?.tags) {
+          minutes = monthStats.tags[selectedTag] || 0;
+        }
+        
+        data.push(minutes);
+      }
+    }
+
+    return {
+      labels,
+      datasets: [{ data }]
+    };
+  };
+
+  // Get tag distribution data for pie chart
+  const getTagDistribution = () => {
+    if (!productivity) return [];
+
+    const tagTotals: Record<string, number> = {};
+    
+    // Aggregate from current period stats based on selected period
+    let statsSource: any[] = [];
+    
+    if (selectedPeriod === 'day') {
+      // Current day only
+      const today = new Date().toISOString().split('T')[0];
+      const dayStats = productivity.dailyStats[today];
+      if (dayStats) statsSource.push(dayStats);
+    } else if (selectedPeriod === 'week') {
+      // Current week - 7 days
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      const dayOfWeek = startOfWeek.getDay();
+      const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      startOfWeek.setDate(diff);
+      
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek);
+        date.setDate(startOfWeek.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayStats = productivity.dailyStats[dateStr];
+        if (dayStats) statsSource.push(dayStats);
+      }
+    } else if (selectedPeriod === 'month') {
+      // Current month - weeks
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const firstMonday = new Date(startOfMonth);
+      const dayOfWeek = firstMonday.getDay();
+      const diffDays = firstMonday.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      firstMonday.setDate(diffDays);
+      
+      let weekStart = new Date(firstMonday);
+      let weekCount = 0;
+      
+      while (weekStart <= endOfMonth && weekCount < 6) {
+        const startOfYear = new Date(weekStart.getFullYear(), 0, 1);
+        const weekNum = Math.ceil(((weekStart.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+        const weekKey = `${weekStart.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
+        
+        const weekStats = productivity.weeklyStats[weekKey];
+        if (weekStats) statsSource.push(weekStats);
+        
+        weekStart.setDate(weekStart.getDate() + 7);
+        weekCount++;
+      }
+    } else {
+      // Current year - 12 months
+      const currentYear = new Date().getFullYear();
+      for (let month = 0; month < 12; month++) {
+        const monthKey = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
+        const monthStats = productivity.monthlyStats[monthKey];
+        if (monthStats) statsSource.push(monthStats);
+      }
+    }
+
+    statsSource.forEach(stats => {
+      Object.entries(stats.tags || {}).forEach(([tag, minutes]) => {
+        if (tag && tag.trim()) {
+          tagTotals[tag] = (tagTotals[tag] || 0) + minutes;
+        }
+      });
+    });
+
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+    
+    return Object.entries(tagTotals)
+      .filter(([tag, minutes]) => tag && minutes > 0)
+      .map(([tag, minutes], index) => ({
+        name: tag,
+        population: minutes,
+        color: colors[index % colors.length],
+        legendFontColor: '#7F7F7F',
+        legendFontSize: 12,
+      }));
+  };
+
+  // Generate stat cards
+  const getStatCards = (): StatCard[] => {
+    if (!productivity) return [];
+
+    const cards: StatCard[] = [
+      {
+        title: 'Total Study Time',
+        value: `${Math.floor(productivity.allTimeStats.totalMinutes / 60)}h ${productivity.allTimeStats.totalMinutes % 60}m`,
+        subtitle: 'All time',
+        color: '#4ECDC4'
+      },
+      {
+        title: 'Current Streak',
+        value: `${productivity.allTimeStats.currentStreak}`,
+        subtitle: 'days',
+        color: '#FF6B6B'
+      },
+      {
+        title: 'Total Sessions',
+        value: `${productivity.allTimeStats.totalSessions}`,
+        subtitle: 'completed',
+        color: '#45B7D1'
+      },
+      {
+        title: 'Coins Earned',
+        value: `${productivity.allTimeStats.totalCoinsEarned}`,
+        subtitle: 'from studying',
+        color: '#FFEAA7'
+      }
+    ];
+
+    return cards;
+  };
+
+  const availableTags = getAvailableTags();
+  const chartData = getTimeSeriesData();
+  const tagDistribution = getTagDistribution();
+  const statCards = getStatCards();
+
+  if (loading) {
     return (
-        <View>
-            <Text>Stats</Text>
-        </View>
-    )
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading statistics...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ImageBackground
+      source={require('@/assets/images/background.jpg')}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <LinearGradient
+        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
+        style={styles.overlay}
+      >
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Study Statistics</Text>
+            <Text style={styles.subtitle}>Track your progress and productivity</Text>
+          </View>
+
+          {/* Time Period Selector */}
+          <View style={styles.periodSelector}>
+            {(['day', 'week', 'month', 'year'] as TimePeriod[]).map((period) => (
+              <TouchableOpacity
+                key={period}
+                style={[
+                  styles.periodButton,
+                  selectedPeriod === period && styles.periodButtonActive
+                ]}
+                onPress={() => setSelectedPeriod(period)}
+              >
+                <Text style={[
+                  styles.periodButtonText,
+                  selectedPeriod === period && styles.periodButtonTextActive
+                ]}>
+                  {period.charAt(0).toUpperCase() + period.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Tag Filter */}
+          {availableTags.length > 0 && (
+            <View style={styles.tagFilter}>
+              <Text style={styles.sectionTitle}>Filter by Tag:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={[
+                    styles.tagChip,
+                    !selectedTag && styles.tagChipActive
+                  ]}
+                  onPress={() => setSelectedTag(null)}
+                >
+                  <Text style={[
+                    styles.tagChipText,
+                    !selectedTag && styles.tagChipTextActive
+                  ]}>
+                    All
+                  </Text>
+                </TouchableOpacity>
+                {availableTags.map((tag) => (
+                  <TouchableOpacity
+                    key={tag}
+                    style={[
+                      styles.tagChip,
+                      selectedTag === tag && styles.tagChipActive
+                    ]}
+                    onPress={() => setSelectedTag(tag)}
+                  >
+                    <Text style={[
+                      styles.tagChipText,
+                      selectedTag === tag && styles.tagChipTextActive
+                    ]}>
+                      {tag}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Stat Cards */}
+          <View style={styles.statsGrid}>
+            {statCards.map((card, index) => (
+              <View key={index} style={[styles.statCard, { borderLeftColor: card.color }]}>
+                <Text style={styles.statValue}>{card.value}</Text>
+                <Text style={styles.statTitle}>{card.title}</Text>
+                {card.subtitle && <Text style={styles.statSubtitle}>{card.subtitle}</Text>}
+              </View>
+            ))}
+          </View>
+
+          {/* Time Series Chart */}
+          <View style={styles.chartContainer}>
+            <Text style={styles.sectionTitle}>Study Time Trend</Text>
+            <LineChart
+              data={chartData}
+              width={width - 40}
+              height={220}
+              fromZero={true}
+              yAxisSuffix="h"
+              formatYLabel={(yValue) => (parseFloat(yValue) / 60).toFixed(1)}
+              formatXLabel={(value) => {
+                if (selectedPeriod === 'day') {
+                  return value.split(':')[0];
+                }
+                return value;
+              }}
+              chartConfig={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                backgroundGradientFrom: 'rgba(255, 255, 255, 0.1)',
+                backgroundGradientTo: 'rgba(255, 255, 255, 0.1)',
+                decimalPlaces: 1,
+                color: (opacity = 1) => `rgba(78, 205, 196, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Changed to black
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '2',
+                  stroke: '#4ECDC4'
+                },
+              }}
+              bezier
+              style={styles.chart}
+            />
+          </View>
+
+          {/* Tag Distribution */}
+          {tagDistribution.length > 0 && (
+            <View style={styles.chartContainer}>
+              <Text style={styles.sectionTitle}>Study Categories</Text>
+              <PieChart
+                data={tagDistribution}
+                width={width - 40}
+                height={220}
+                chartConfig={{
+                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                }}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                absolute
+                style={styles.chart}
+              />
+            </View>
+          )}
+
+          {/* Recent Sessions */}
+          <View style={styles.recentSessions}>
+            <Text style={styles.sectionTitle}>Recent Sessions</Text>
+            <FlatList
+              data={productivity?.recentSessions.slice(0, 10) || []}
+              keyExtractor={(item) => item.sessionId}
+              renderItem={({ item }) => (
+                <View style={styles.sessionItem}>
+                  <View style={styles.sessionInfo}>
+                    <Text style={styles.sessionDate}>
+                      {new Date(item.startTime).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.sessionTime}>
+                      {new Date(item.startTime).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.sessionDetails}>
+                    <Text style={styles.sessionDuration}>
+                      {Math.floor(item.sessionDuration / 60)}m {item.sessionDuration % 60}s
+                    </Text>
+                    {item.tag && (
+                      <View style={styles.sessionTag}>
+                        <Text style={styles.sessionTagText}>{item.tag}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+              scrollEnabled={false}
+            />
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </ImageBackground>
+  );
 }
+
+const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  header: {
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  periodSelector: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 25,
+    padding: 4,
+    marginBottom: 20,
+  },
+  periodButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  periodButtonActive: {
+    backgroundColor: '#4ECDC4',
+  },
+  periodButtonText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '600',
+  },
+  periodButtonTextActive: {
+    color: '#fff',
+  },
+  tagFilter: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  tagChip: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  tagChipActive: {
+    backgroundColor: '#4ECDC4',
+  },
+  tagChipText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+  },
+  tagChipTextActive: {
+    color: '#fff',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  statCard: {
+    width: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  statTitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 2,
+  },
+  statSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+  chartContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  chart: {
+    borderRadius: 16,
+  },
+  recentSessions: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+  },
+  sessionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  sessionInfo: {
+    flex: 1,
+  },
+  sessionDate: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sessionTime: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 12,
+  },
+  sessionDetails: {
+    alignItems: 'flex-end',
+  },
+  sessionDuration: {
+    color: '#4ECDC4',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sessionTag: {
+    backgroundColor: 'rgba(78, 205, 196, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  sessionTagText: {
+    color: '#4ECDC4',
+    fontSize: 10,
+  },
+});
