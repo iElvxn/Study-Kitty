@@ -13,7 +13,7 @@
       "legendary": [
         "persian"
       ],
-      "cost": 30
+      "cost": 15
     },
     "gold": {
       "common": [
@@ -28,7 +28,7 @@
       "legendary": [
         "classy"
       ],
-      "cost": 50
+      "cost": 30
     },
     "diamond": {
       "common": [
@@ -43,11 +43,11 @@
       "legendary": [
         "cherry-blossom-calico"
       ],
-      "cost": 100
+      "cost": 75
     },
     "rarityWeights": {
-      "common": 55,
-      "uncommon": 30,
+      "common": 50,
+      "uncommon": 35,
       "rare": 13,
       "legendary": 2
     }

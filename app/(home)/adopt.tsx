@@ -83,6 +83,12 @@ const AdoptScreen: React.FC = () => {
         return null;
       }
 
+      const cost = getTierCost(selectedTier);
+      if (!userData || userData.coins < cost) {
+        Alert.alert('Not enough coins', 'You do not have enough coins to adopt a cat.');
+        return null;
+      }
+
       const res = await apiRequest("/adopt", "POST", token, { tier: selectedTier });
       console.log(selectedTier)
 

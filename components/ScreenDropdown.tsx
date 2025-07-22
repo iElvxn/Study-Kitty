@@ -8,9 +8,10 @@ import { ThemedText } from './ThemedText';
 import { IconSymbol } from './ui/IconSymbol';
 
 const SCREENS = [
-  { name: 'Timer', route: '/' as const, icon: 'house.fill' as const },
+  { name: 'Timer', route: '/' as const, icon: 'timer' as const },
   { name: 'Adopt Cats', route: '/adopt' as const, icon: 'paperplane.fill' as const },
   { name: 'Purrdex', route: '/purrdex' as const, icon: 'person.fill' as const },
+  { name: 'Statistics', route: '/statistics' as const, icon: 'chart.bar.fill' as const },
 ] as const;
 
 export function ScreenDropdown() {

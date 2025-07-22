@@ -12,7 +12,7 @@ export const CAFES: CafeRecord[] = [
                 levels: {
                     2: {
                         description: 'A double cat tree for your cats to rest on',
-                        cost: 100,
+                        cost: 25,
                         icon: require('@/assets/images/upgrades/Cat Tree 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 1.png'),
                         catSpots: [
@@ -22,7 +22,7 @@ export const CAFES: CafeRecord[] = [
                     },
                     3: {
                         description: 'A taller cat tree for your cat',
-                        cost: 250,
+                        cost: 75,
                         icon: require('@/assets/images/upgrades/Cat Tree 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 2.png'),
                         catSpots: [
@@ -31,7 +31,7 @@ export const CAFES: CafeRecord[] = [
                     },
                     4: {
                         description: 'A double cat tree for your cats to rest on',
-                        cost: 500,
+                        cost: 150,
                         icon: require('@/assets/images/upgrades/Cat Tree 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Cat Tree 3.png'),
                         catSpots: [
@@ -49,7 +49,7 @@ export const CAFES: CafeRecord[] = [
                 levels: {
                     2: {
                         description: 'A cozy little coffee table',
-                        cost: 50,
+                        cost: 25,
                         icon: require('@/assets/images/upgrades/Table 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 1.png'),
                         catSpots: [
@@ -57,7 +57,7 @@ export const CAFES: CafeRecord[] = [
                     },
                     3: {
                         description: 'A table for two!',
-                        cost: 300,
+                        cost: 50,
                         icon: require('@/assets/images/upgrades/Table 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 2.png'),
                         catSpots: [
@@ -66,7 +66,7 @@ export const CAFES: CafeRecord[] = [
                     },
                     4: {
                         description: 'A table for two!',
-                        cost: 600,
+                        cost: 100,
                         icon: require('@/assets/images/upgrades/Table 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 3.png'),
                         catSpots: [
@@ -75,7 +75,7 @@ export const CAFES: CafeRecord[] = [
                     },
                     5: {
                         description: 'A cozy little coffee table',
-                        cost: 1200,
+                        cost: 250,
                         icon: require('@/assets/images/upgrades/Table 4 Icon.png'),
                         image: require('@/assets/images/upgrades/Table 4.png'),
                         catSpots: [
@@ -91,7 +91,7 @@ export const CAFES: CafeRecord[] = [
                 levels: {
                     2: {
                         description: 'A tabby cat rug for your cats to rest on!',
-                        cost: 300,
+                        cost: 50,
                         icon: require('@/assets/images/upgrades/Decor 1 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 1.png'),
                         catSpots: [
@@ -99,7 +99,7 @@ export const CAFES: CafeRecord[] = [
                           ],                    },
                     3: {
                         description: 'An ottoman for your cats to rest on!',
-                        cost: 600,
+                        cost: 100,
                         icon: require('@/assets/images/upgrades/Decor 2 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 2.png'),
                         catSpots: [
@@ -107,7 +107,7 @@ export const CAFES: CafeRecord[] = [
                           ],                    },
                     4: {
                         description: 'A gray cat bed for your cats to rest on!',
-                        cost: 600,
+                        cost: 200,
                         icon: require('@/assets/images/upgrades/Decor 3 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 3.png'),
                         catSpots: [
@@ -115,14 +115,14 @@ export const CAFES: CafeRecord[] = [
                           ],                    },
                     5: {
                         description: 'A nice welcome mat!',
-                        cost: 600,
+                        cost: 300,
                         icon: require('@/assets/images/upgrades/Decor 4 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 4.png'),
                         catSpots: [
                           ],                    },
                     6: {
                         description: 'A nice little ottoman for your cats to rest on!',
-                        cost: 600,
+                        cost: 400,
                         icon: require('@/assets/images/upgrades/Decor 5 Icon.png'),
                         image: require('@/assets/images/upgrades/Decor 5.png'),
                         catSpots: [

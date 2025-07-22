@@ -130,8 +130,8 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
 
 // Rarity weights for overall selection
 export const RARITY_WEIGHTS = {
-    common: 55,
-    uncommon: 30,
+    common: 50,
+    uncommon: 35,
     rare: 13,
     legendary: 2
 };
@@ -139,9 +139,9 @@ export const RARITY_WEIGHTS = {
 // Helper function to get cost for a tier
 export const getTierCost = (tier: string): number => {
     switch (tier) {
-        case 'common': return 30;
-        case 'gold': return 50;
-        case 'diamond': return 100;
+        case 'common': return 15;
+        case 'gold': return 30;
+        case 'diamond': return 75;
         default: return 100;
     }
 };

@@ -72,14 +72,14 @@ export default function HomeScreen() {
     router.push('/upgrade');
   }, []);
 
-  const handleCoinReward = async () => {
+  const handleSessionComplete = async () => {
     try {
       const token = await getToken();
       if (!token) {
         console.log("No token?");
         return;
       }
-      const res = await apiRequest("/coins", "POST", token, { sessionDuration: sessionTime });
+      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime});
       const data = res.data as { newBalance: number; coinsAwarded: number };
       const newBalance = data.newBalance; 
 
@@ -89,14 +89,14 @@ export default function HomeScreen() {
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
 
-      // Update the cache:
+      // Update the cache:          I NEED TO UPDATE STATS TOO
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
         const updatedUser = { ...cachedUser, coins: newBalance };
         await setCachedUserData(updatedUser);
       }
     } catch (error) {
-      console.log("Error in handleCoinReward:", error);
+      console.log("Error in handleSessionComplete:", error);
     }
   };
 
@@ -111,7 +111,7 @@ export default function HomeScreen() {
       <Furniture upgrades={upgrades} />
       {isTimerActive && <Cats sessionTime={sessionTime} />}
       <View style={styles.content}>
-        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} onComplete={handleCoinReward} />
+        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} onComplete={handleSessionComplete} />
       </View>
       {!isTimerActive ?
         <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
