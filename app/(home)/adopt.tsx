@@ -93,13 +93,13 @@ const AdoptScreen: React.FC = () => {
       console.log(selectedTier)
 
       // Type guard to ensure res.data has the expected structure
-      if (!res.data || typeof res.data !== 'object' || !('rarity' in res.data) || !('id' in res.data) || !('userData' in res.data)) {
+      if (!res.data || typeof res.data !== 'object' || !('rarity' in res.data) || !('id' in res.data) || !('newUserData' in res.data)) {
         throw new Error('Invalid response format');
       }
 
-      const { rarity, id, userData } = res.data as { rarity: string; id: string; userData: any };
-      setCachedUserData(userData);
-      setUserData(userData);
+      const { rarity, id, newUserData } = res.data as { rarity: string; id: string; newUserData: any };
+      setCachedUserData(newUserData);
+      setUserData(newUserData);
       const catData = CATS_BY_RARITY[selectedTier]?.[rarity]?.find(({ id: catId }) => catId === id);
       console.log(id, rarity)
       if (!catData) {

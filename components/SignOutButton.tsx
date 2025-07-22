@@ -2,6 +2,7 @@ import { Colors } from '@/constants/Colors'
 import { useClerk } from '@clerk/clerk-expo'
 import * as Linking from 'expo-linking'
 import { StyleSheet, TouchableOpacity } from 'react-native'
+import { clearUserCache } from '../app/aws/users'
 import { ThemedText } from './ThemedText'
 import { IconSymbol } from './ui/IconSymbol'
 
@@ -15,6 +16,7 @@ export const SignOutButton = ({ onSignOut }: SignOutButtonProps) => {
 
   const handleSignOut = async () => {
     try {
+      await clearUserCache()
       await signOut()
       onSignOut?.()
       // Redirect to your desired page
