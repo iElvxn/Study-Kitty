@@ -664,6 +664,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chart: {
+    backgroundColor: 'rgb(255, 255, 255)',
+    paddingVertical: 16,
     borderRadius: 16,
   },
   recentSessions: {
