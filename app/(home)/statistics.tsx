@@ -613,23 +613,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   periodButtonActive: {
-    backgroundColor: '#4ECDC4',
+    backgroundColor: 'rgba(255, 245, 230, 0.95)',
   },
   periodButtonText: {
     color: 'rgba(255, 255, 255, 0.7)',
-    fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   periodButtonTextActive: {
-    color: '#fff',
+    color: '#000',
+    fontFamily: 'Quicksand_700Bold',
   },
   tagFilter: {
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
     marginBottom: 12,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   tagChip: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -664,16 +668,21 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
     marginBottom: 4,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   statTitle: {
+    fontFamily: 'Quicksand_700Bold',
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 2,
   },
   statSubtitle: {
+    fontFamily: 'Quicksand_500Medium',
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
   },
@@ -709,7 +718,7 @@ const styles = StyleSheet.create({
   sessionDate: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Quicksand_700Bold',
   },
   sessionTime: {
     color: 'rgba(255, 255, 255, 0.7)',
