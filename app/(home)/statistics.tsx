@@ -3,14 +3,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useState } from 'react';
 import {
-    Dimensions,
-    FlatList,
-    ImageBackground,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  FlatList,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { getUser } from '../aws/users';
@@ -90,7 +90,10 @@ export default function Statistics() {
 
     if (selectedPeriod === 'day') {
       // Current day - show hourly breakdown (or sessions if no hourly data)
-      const today = now.toISOString().split('T')[0];
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
       const todayStats = productivity.dailyStats[today];
       
       if (todayStats && productivity.recentSessions) {
@@ -454,8 +457,18 @@ export default function Statistics() {
               width={width - 40}
               height={220}
               fromZero={true}
-              yAxisSuffix="h"
-              formatYLabel={(yValue) => (parseFloat(yValue) / 60).toFixed(1)}
+              formatYLabel={(y) => {
+                const yValue = parseFloat(y);
+                const hours = Math.floor(yValue / 60);
+                const mins = Math.round(yValue % 60);
+
+                if (hours > 0 && mins > 0) {
+                  return `${hours}h ${mins}m`;
+                } if (hours > 0) {
+                  return `${hours}h`;
+                }
+                return `${mins}m`;
+              }}
               formatXLabel={(value) => {
                 if (selectedPeriod === 'day') {
                   return value.split(':')[0];
@@ -565,18 +578,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   header: {
-    marginBottom: 30,
+    paddingTop: 60,
+    marginBottom: 20,
     alignItems: 'center',
   },
   title: {
+    fontFamily: 'Quicksand_700Bold',
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
+    color: '#FFF5E6',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#F9E4BC',
+    fontFamily: 'Quicksand_500Medium',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   periodSelector: {
     flexDirection: 'row',

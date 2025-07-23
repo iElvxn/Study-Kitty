@@ -80,9 +80,10 @@ export default function HomeScreen() {
         return;
       }
       const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime});
-      const data = res.data as { newBalance: number; coinsAwarded: number };
+      const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
       const newBalance = data.newBalance; 
-
+      const newProductivity = data.newProductivity
+      
       setEarnedAmount(data.coinsAwarded);
       // Pick a random quote for the modal
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
@@ -92,7 +93,7 @@ export default function HomeScreen() {
       // Update the cache:          I NEED TO UPDATE STATS TOO
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
-        const updatedUser = { ...cachedUser, coins: newBalance };
+        const updatedUser = { ...cachedUser, coins: newBalance, productivity: newProductivity };
         await setCachedUserData(updatedUser);
       }
     } catch (error) {
