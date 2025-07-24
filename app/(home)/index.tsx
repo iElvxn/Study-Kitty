@@ -159,7 +159,15 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {showTagsModal && <Tags setShowTagsModal={setShowTagsModal} onTagsUpdate={(selectedTag: string | null) => {setSelectedTag(selectedTag);}} />}
+      {showTagsModal && (
+        <Tags 
+          setShowTagsModal={setShowTagsModal} 
+          onTagsUpdate={(selectedTag: string | null) => {
+            setSelectedTag(selectedTag);
+          }}
+          initialSelectedTag={selectedTag}
+        />
+      )}
     </View>
   );
 }
