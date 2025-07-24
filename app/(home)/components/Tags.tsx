@@ -38,7 +38,6 @@ export default function Tags({ setShowTagsModal, onTagsUpdate, initialSelectedTa
 
     // Load user's tags from storage/API
     useEffect(() => {
-        // TODO: Replace with actual API call to fetch user's tags
         const fetchTags = async () => {
             try {
                 const token = await getToken();
@@ -91,11 +90,22 @@ export default function Tags({ setShowTagsModal, onTagsUpdate, initialSelectedTa
     };
 
     const toggleTagSelection = (tagId: string) => {
-        setSelectedTag(prev => prev === tagId ? null : tagId);
+        // If the tag is already selected, deselect it
+        // Otherwise, select the new tag
+        const newSelectedTag = selectedTag === tagId ? null : tagId;
+        setSelectedTag(newSelectedTag);
+        
+        // Notify parent component of the selection
+        if (onTagsUpdate) {
+            onTagsUpdate(newSelectedTag);
+        }
     };
 
     const handleDone = () => {
-        onTagsUpdate?.(selectedTag);
+        // If a tag is selected, notify the parent
+        if (onTagsUpdate) {
+            onTagsUpdate(selectedTag);
+        }
         setShowTagsModal(false);
     };
 
@@ -103,7 +113,12 @@ export default function Tags({ setShowTagsModal, onTagsUpdate, initialSelectedTa
         if (selectedTag) {
             // Delete the selected tag
             setTags(prevTags => prevTags.filter(tag => tag.id !== selectedTag));
-            setSelectedTag(null);
+            
+            // If the deleted tag was selected, clear the selection
+            if (onTagsUpdate) {
+                onTagsUpdate(null);
+            }
+            
             //delete from database and cache
             const token = await getToken();
             if (!token) return;
@@ -364,8 +379,6 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#D4A76A',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 4,

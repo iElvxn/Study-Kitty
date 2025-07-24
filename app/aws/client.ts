@@ -6,6 +6,8 @@ export const apiRequest = async <T>(
   token: string,
   body?: any
 ): Promise<{ data: T; statusCode: number }> => {
+
+  console.log("Body:", body);
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     method,
     headers: {

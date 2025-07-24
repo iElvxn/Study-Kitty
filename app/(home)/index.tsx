@@ -26,6 +26,7 @@ export default function HomeScreen() {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [showTagsModal, setShowTagsModal] = useState(false);
   const [earnedAmount, setEarnedAmount] = useState(0);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
 
   const completionQuotes: String[] = [
@@ -81,7 +82,8 @@ export default function HomeScreen() {
         console.log("No token?");
         return;
       }
-      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime });
+      console.log("Selected tag:asd", selectedTag);
+      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag });
       const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
       const newBalance = data.newBalance;
       const newProductivity = data.newProductivity
@@ -157,7 +159,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {showTagsModal && <Tags setShowTagsModal={setShowTagsModal} />}
+      {showTagsModal && <Tags setShowTagsModal={setShowTagsModal} onTagsUpdate={(selectedTag: string | null) => {setSelectedTag(selectedTag);}} />}
     </View>
   );
 }

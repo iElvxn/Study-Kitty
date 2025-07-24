@@ -113,11 +113,7 @@ export default function Statistics() {
         todaySessions.forEach(session => {
           const startHour = new Date(session.startTime).getHours();
           const minutes = Math.floor(session.sessionDuration / 60);
-          
-          // Filter by tag if selected
-          if (!selectedTag || session.tag === selectedTag) {
-            hourlyData[startHour] += minutes;
-          }
+          hourlyData[startHour] += minutes;
         });
         
         // Only show hours with data or around current time
@@ -292,7 +288,7 @@ export default function Statistics() {
       }
     }
 
-    statsSource.forEach(stats => {
+    statsSource.forEach((stats: { tags?: Record<string, number> }) => {
       Object.entries(stats.tags || {}).forEach(([tag, minutes]) => {
         if (tag && tag.trim()) {
           tagTotals[tag] = (tagTotals[tag] || 0) + minutes;
@@ -347,7 +343,6 @@ export default function Statistics() {
     return cards;
   };
 
-  const availableTags = getAvailableTags();
   const chartData = getTimeSeriesData();
   const tagDistribution = getTagDistribution();
   const statCards = getStatCards();
@@ -397,46 +392,6 @@ export default function Statistics() {
               </TouchableOpacity>
             ))}
           </View>
-
-          {/* Tag Filter */}
-          {availableTags.length > 0 && (
-            <View style={styles.tagFilter}>
-              <Text style={styles.sectionTitle}>Filter by Tag:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <TouchableOpacity
-                  style={[
-                    styles.tagChip,
-                    !selectedTag && styles.tagChipActive
-                  ]}
-                  onPress={() => setSelectedTag(null)}
-                >
-                  <Text style={[
-                    styles.tagChipText,
-                    !selectedTag && styles.tagChipTextActive
-                  ]}>
-                    All
-                  </Text>
-                </TouchableOpacity>
-                {availableTags.map((tag) => (
-                  <TouchableOpacity
-                    key={tag}
-                    style={[
-                      styles.tagChip,
-                      selectedTag === tag && styles.tagChipActive
-                    ]}
-                    onPress={() => setSelectedTag(tag)}
-                  >
-                    <Text style={[
-                      styles.tagChipText,
-                      selectedTag === tag && styles.tagChipTextActive
-                    ]}>
-                      {tag}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
 
           {/* Stat Cards */}
           <View style={styles.statsGrid}>
@@ -622,9 +577,6 @@ const styles = StyleSheet.create({
   periodButtonTextActive: {
     color: '#000',
     fontFamily: 'Quicksand_700Bold',
-  },
-  tagFilter: {
-    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
