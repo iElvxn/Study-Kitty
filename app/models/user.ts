@@ -1,5 +1,6 @@
 import { CafeRecord } from "./cafe";
 import { CatRecord } from "./catRecord";
+import { TagRecord } from "./tagRecord";
 
 export interface StudySession {
     sessionId: string;
@@ -53,5 +54,6 @@ export interface UserRecord {
     currentCafe: number;
     cafes: CafeRecord[]; // Array of cafes owned by the user
     cats: CatRecord[];
-    productivity?: ProductivityData;
+    productivity: ProductivityData;
+    tags: TagRecord[];
 }

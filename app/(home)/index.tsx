@@ -12,6 +12,7 @@ import { Upgrade } from '../models/upgrade';
 import Cats from "./components/Cats";
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
+import Tags from './components/Tags';
 import { fetchUserUpgrades, getUpgrades } from "./upgrade";
 
 const { width, height } = Dimensions.get('window');
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
   const { refreshTrigger } = useUpgrade();
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const [showTagsModal, setShowTagsModal] = useState(false);
   const [earnedAmount, setEarnedAmount] = useState(0);
 
 
@@ -79,18 +81,18 @@ export default function HomeScreen() {
         console.log("No token?");
         return;
       }
-      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime});
+      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime });
       const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
-      const newBalance = data.newBalance; 
+      const newBalance = data.newBalance;
       const newProductivity = data.newProductivity
-      
+
       setEarnedAmount(data.coinsAwarded);
       // Pick a random quote for the modal
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
 
-      // Update the cache:          I NEED TO UPDATE STATS TOO
+      // Update the cache
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
         const updatedUser = { ...cachedUser, coins: newBalance, productivity: newProductivity };
@@ -115,9 +117,15 @@ export default function HomeScreen() {
         <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} onComplete={handleSessionComplete} />
       </View>
       {!isTimerActive ?
-        <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
-          <Text style={styles.upgradeButtonText}>Upgrade Cafe</Text>
-        </TouchableOpacity>
+        <View style={styles.homeButtons}>
+          <TouchableOpacity style={styles.upgradeButton} onPress={() => setShowTagsModal(true)}>
+            <Text style={styles.upgradeButtonText}>Tags</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.upgradeButton} onPress={handleUpgradePress}>
+            <Text style={styles.upgradeButtonText}>Upgrade Cafe</Text>
+          </TouchableOpacity>
+        </View>
+
         : null
       }
       {/* Reward Modal */}
@@ -132,7 +140,7 @@ export default function HomeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{modalQuote}</Text>
-            <Text style={styles.modalText}>Studied for {sessionTime/60} minutes</Text>
+            <Text style={styles.modalText}>Studied for {sessionTime / 60} minutes</Text>
             <Text style={styles.modalText}>You earned</Text>
             <View style={styles.coinRow}>
               <Image source={require('@/assets/images/coin.png')} style={styles.coinIcon} />
@@ -148,6 +156,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      {showTagsModal && <Tags setShowTagsModal={setShowTagsModal} />}
     </View>
   );
 }
@@ -166,10 +176,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  upgradeButton: {
+  homeButtons: {
+    width: '100%',  
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     position: 'absolute',
-    bottom: 40,
-    right: 20,
+    bottom: 20,
+  },
+  upgradeButton: {
     backgroundColor: 'rgba(46, 44, 44, 0.35)',
     padding: 15,
     borderRadius: 16,
