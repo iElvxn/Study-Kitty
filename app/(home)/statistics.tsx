@@ -357,11 +357,12 @@ export default function Statistics() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Image  
+        <Image
           source={require('@/assets/images/background.jpg')}
           style={styles.backgroundImage}
           contentFit="cover"
           cachePolicy="memory-disk"
+          transition={200}
         />
         <View style={styles.darkOverlay} />
         <ActivityIndicator size="large" color="#B6917E" />
@@ -371,13 +372,13 @@ export default function Statistics() {
 
   return (
     <>
-    <Image
-      source={require('@/assets/images/background.jpg')}
-      style={styles.backgroundImage}
-      cachePolicy="memory-disk"
-      contentFit="cover"
-    />
-    <LinearGradient
+      <Image
+        source={require('@/assets/images/background.jpg')}
+        style={styles.backgroundImage}
+        cachePolicy="memory-disk"
+        contentFit="cover"
+      />
+      <LinearGradient
         colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
         style={styles.overlay}
       >
@@ -529,7 +530,11 @@ export default function Statistics() {
 
 const styles = StyleSheet.create({
   backgroundImage: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   overlay: {
     flex: 1,

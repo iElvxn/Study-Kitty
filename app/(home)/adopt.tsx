@@ -1,13 +1,12 @@
 import { useAuth } from '@clerk/clerk-expo';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Animated,
   Dimensions,
-  Image,
-  ImageBackground,
   Modal,
   StyleSheet,
   Text,
@@ -57,23 +56,23 @@ const AdoptScreen: React.FC = () => {
 
   useEffect(() => {
     let isActive = true;
-    
+
     const fetchUser = async () => {
-        try {
-            const token = await getToken();
-            if (!token) return;
-            const userData = await getUser(token);
-            setUserData(userData);
-        } catch (err) {
-            if (isActive) {
-                console.error("Failed to load data: adopt.tsx");
-            }
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const userData = await getUser(token);
+        setUserData(userData);
+      } catch (err) {
+        if (isActive) {
+          console.error("Failed to load data: adopt.tsx");
         }
+      }
     };
-    
+
     fetchUser();
-  
-}, []);
+
+  }, []);
 
   const performGachaPull = useCallback(async (): Promise<Cat | null> => {
     try {
@@ -183,123 +182,123 @@ const AdoptScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
+      <Image
         source={require('@/assets/images/background.jpg')}
         style={styles.backgroundImage}
-        resizeMode="cover"
+        cachePolicy="memory-disk"
+        contentFit="cover"
+        transition={200}
+      />
+      <LinearGradient
+        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
+        style={styles.overlay}
       >
-        <LinearGradient
-          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
-          style={styles.overlay}
-        >
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Adopt a Cat</Text>
-              <Text style={styles.subtitle}>Try your luck at the gacha machine!</Text>
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Adopt a Cat</Text>
+            <Text style={styles.subtitle}>Try your luck at the gacha machine!</Text>
 
-              {/* Coin Display */}
-              <View style={styles.coinContainer}>
-                <Image
-                  source={require('@/assets/images/coin.png')}
-                  style={styles.coinIcon}
-                />
-                <Text style={styles.coinText}>{userData?.coins || 0}</Text>
-              </View>
-            </View>
-
-            {/* Gacha Machine */}
-            <View style={styles.gachaContainer}>
-              <View style={styles.machineBody}>
-                  <View style={styles.machineTop}>
-                    <View style={styles.machineWindow}>
-                      <Animated.View
-                        style={[
-                          styles.spinningCat,
-                          {
-                            transform: [{ rotate: spinInterpolate }],
-                          },
-                        ]}
-                      >
-                        <Image
-                          source={require('@/assets/images/cats/Gray Tabby.gif')}
-                          style={styles.catPreview}
-                        />
-                      </Animated.View>
-                    </View>
-                  </View>
-              </View>
-
-              {/* Pull Button */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <TouchableOpacity
-                  onPress={() => setTierIndex((prev) => (prev - 1 + TIERS.length) % TIERS.length)}
-                  disabled={tierIndex === 0}
-                  style={[
-                    styles.tierButton,
-                    { opacity: tierIndex === 0 ? 0.3 : 1 }
-                  ]}
-                >
-                  <Text style={styles.tierButtonText}>{'<'}</Text>
-                </TouchableOpacity>
-                <View style={styles.tierDisplay}>
-                  <Text style={styles.tierDisplayText}>
-                    {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => setTierIndex((prev) => (prev + 1) % TIERS.length)}
-                  disabled={tierIndex === TIERS.length - 1}
-                  style={[
-                    styles.tierButton,
-                    { opacity: tierIndex === TIERS.length - 1 ? 0.3 : 1 }
-                  ]}
-                >
-                  <Text style={styles.tierButtonText}>{'>'}</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                style={[styles.pullButton, isSpinning && styles.pullButtonDisabled]}
-                onPress={handleGachaPull}
-                disabled={isSpinning}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={isSpinning ? ['#666', '#888'] : ['#B6917E', '#8B6B5A']}
-                  style={styles.pullButtonGradient}
-                >
-                  <Text style={styles.pullButtonText}>
-                    {isSpinning ? 'Spinning...' : 'Pull for Cat!'}
-                  </Text>
-                  <View style={styles.costContainer}>
-                    <Image 
-                      source={require('@/assets/images/coin.png')} 
-                      style={styles.costIcon} 
-                    />
-                    <Text style={styles.costText}>{getTierCost(selectedTier)}</Text>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-
-            {/* Rarity Info */}
-            <View style={styles.rarityInfo}>
-              <Text style={styles.rarityTitle}>Rarity Chances:</Text>
-              <View style={styles.rarityList}>
-                {Object.entries(RARITY_WEIGHTS).map(([rarity, weight]) => (
-                  <View key={rarity} style={styles.rarityItem}>
-                    <Text style={styles.rarityEmoji}>{getRarityEmoji(rarity)}</Text>
-                    <Text style={styles.rarityText}>
-                      {rarity.charAt(0).toUpperCase() + rarity.slice(1)}: {weight}%
-                    </Text>
-                  </View>
-                ))}
-              </View>
+            {/* Coin Display */}
+            <View style={styles.coinContainer}>
+              <Image
+                source={require('@/assets/images/coin.png')}
+                style={styles.coinIcon}
+              />
+              <Text style={styles.coinText}>{userData?.coins || 0}</Text>
             </View>
           </View>
-        </LinearGradient>
-      </ImageBackground>
 
+          {/* Gacha Machine */}
+          <View style={styles.gachaContainer}>
+            <View style={styles.machineBody}>
+              <View style={styles.machineTop}>
+                <View style={styles.machineWindow}>
+                  <Animated.View
+                    style={[
+                      styles.spinningCat,
+                      {
+                        transform: [{ rotate: spinInterpolate }],
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={require('@/assets/images/cats/Gray Tabby.gif')}
+                      style={styles.catPreview}
+                    />
+                  </Animated.View>
+                </View>
+              </View>
+            </View>
+
+            {/* Pull Button */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <TouchableOpacity
+                onPress={() => setTierIndex((prev) => (prev - 1 + TIERS.length) % TIERS.length)}
+                disabled={tierIndex === 0}
+                style={[
+                  styles.tierButton,
+                  { opacity: tierIndex === 0 ? 0.3 : 1 }
+                ]}
+              >
+                <Text style={styles.tierButtonText}>{'<'}</Text>
+              </TouchableOpacity>
+              <View style={styles.tierDisplay}>
+                <Text style={styles.tierDisplayText}>
+                  {selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setTierIndex((prev) => (prev + 1) % TIERS.length)}
+                disabled={tierIndex === TIERS.length - 1}
+                style={[
+                  styles.tierButton,
+                  { opacity: tierIndex === TIERS.length - 1 ? 0.3 : 1 }
+                ]}
+              >
+                <Text style={styles.tierButtonText}>{'>'}</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={[styles.pullButton, isSpinning && styles.pullButtonDisabled]}
+              onPress={handleGachaPull}
+              disabled={isSpinning}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={isSpinning ? ['#666', '#888'] : ['#B6917E', '#8B6B5A']}
+                style={styles.pullButtonGradient}
+              >
+                <Text style={styles.pullButtonText}>
+                  {isSpinning ? 'Spinning...' : 'Pull for Cat!'}
+                </Text>
+                <View style={styles.costContainer}>
+                  <Image
+                    source={require('@/assets/images/coin.png')}
+                    style={styles.costIcon}
+                  />
+                  <Text style={styles.costText}>{getTierCost(selectedTier)}</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
+          {/* Rarity Info */}
+          <View style={styles.rarityInfo}>
+            <Text style={styles.rarityTitle}>Rarity Chances:</Text>
+            <View style={styles.rarityList}>
+              {Object.entries(RARITY_WEIGHTS).map(([rarity, weight]) => (
+                <View key={rarity} style={styles.rarityItem}>
+                  <Text style={styles.rarityEmoji}>{getRarityEmoji(rarity)}</Text>
+                  <Text style={styles.rarityText}>
+                    {rarity.charAt(0).toUpperCase() + rarity.slice(1)}: {weight}%
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
       {/* Result Modal */}
       <Modal
         visible={showResult}
