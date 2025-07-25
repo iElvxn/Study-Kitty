@@ -1,11 +1,12 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { useFocusEffect } from '@react-navigation/native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -33,6 +34,11 @@ export default function Statistics() {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('week');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Preload background image
+  useEffect(() => {
+    Image.prefetch(require('@/assets/images/background.jpg'));
+  }, []);
 
   // Fetch user data when screen comes into focus
   useFocusEffect(
@@ -70,7 +76,7 @@ export default function Statistics() {
   // Get available tags from recent sessions
   const getAvailableTags = (): string[] => {
     if (!productivity?.recentSessions) return [];
-    
+
     const tags = new Set<string>();
     productivity.recentSessions.forEach(session => {
       if (session.tag && session.tag.trim()) {
@@ -95,32 +101,32 @@ export default function Statistics() {
       const day = now.getDate().toString().padStart(2, '0');
       const today = `${year}-${month}-${day}`;
       const todayStats = productivity.dailyStats[today];
-      
+
       if (todayStats && productivity.recentSessions) {
         // Get today's sessions and group by hour
-        const todaySessions = productivity.recentSessions.filter(session => 
+        const todaySessions = productivity.recentSessions.filter(session =>
           session.date === today
         );
-        
+
         const hourlyData: Record<number, number> = {};
-        
+
         // Initialize all hours to 0
         for (let hour = 0; hour < 24; hour++) {
           hourlyData[hour] = 0;
         }
-        
+
         // Aggregate sessions by hour
         todaySessions.forEach(session => {
           const startHour = new Date(session.startTime).getHours();
           const minutes = Math.floor(session.sessionDuration / 60);
           hourlyData[startHour] += minutes;
         });
-        
+
         // Only show hours with data or around current time
         const currentHour = now.getHours();
         const startHour = Math.max(0, currentHour - 6);
         const endHour = Math.min(23, currentHour + 6);
-        
+
         for (let hour = startHour; hour <= endHour; hour++) {
           labels.push(`${hour.toString().padStart(2, '0')}:00`);
           data.push(hourlyData[hour]);
@@ -140,80 +146,80 @@ export default function Statistics() {
       const dayOfWeek = startOfWeek.getDay();
       const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Monday start
       startOfWeek.setDate(diff);
-      
+
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
         const dateStr = date.toISOString().split('T')[0];
-        
+
         labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
-        
+
         const dayStats = productivity.dailyStats[dateStr];
         let minutes = dayStats?.totalMinutes || 0;
-        
+
         if (selectedTag && dayStats?.tags) {
           minutes = dayStats.tags[selectedTag] || 0;
         }
-        
+
         data.push(minutes);
       }
     } else if (selectedPeriod === 'month') {
       // Current month - show weeks of current month
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      
+
       // Find first Monday of the month (or before)
       const firstMonday = new Date(startOfMonth);
       const dayOfWeek = firstMonday.getDay();
       const diff = firstMonday.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       firstMonday.setDate(diff);
-      
+
       let weekStart = new Date(firstMonday);
       let weekNumber = 1;
-      
+
       while (weekStart <= endOfMonth) {
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
-        
+
         // Calculate week key
         const startOfYear = new Date(weekStart.getFullYear(), 0, 1);
         const weekNum = Math.ceil(((weekStart.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
         const weekKey = `${weekStart.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
-        
+
         labels.push(`Week ${weekNumber}`);
-        
+
         const weekStats = productivity.weeklyStats[weekKey];
         let minutes = weekStats?.totalMinutes || 0;
-        
+
         if (selectedTag && weekStats?.tags) {
           minutes = weekStats.tags[selectedTag] || 0;
         }
-        
+
         data.push(minutes);
-        
+
         weekStart.setDate(weekStart.getDate() + 7);
         weekNumber++;
-        
+
         // Safety break
         if (weekNumber > 6) break;
       }
     } else {
       // Current year - show 12 months of current year
       const currentYear = now.getFullYear();
-      
+
       for (let month = 0; month < 12; month++) {
         const monthKey = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
         const monthDate = new Date(currentYear, month, 1);
-        
+
         labels.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
-        
+
         const monthStats = productivity.monthlyStats[monthKey];
         let minutes = monthStats?.totalMinutes || 0;
-        
+
         if (selectedTag && monthStats?.tags) {
           minutes = monthStats.tags[selectedTag] || 0;
         }
-        
+
         data.push(minutes);
       }
     }
@@ -229,10 +235,10 @@ export default function Statistics() {
     if (!productivity) return [];
 
     const tagTotals: Record<string, number> = {};
-    
+
     // Aggregate from current period stats based on selected period
     let statsSource: any[] = [];
-    
+
     if (selectedPeriod === 'day') {
       // Current day only
       const today = new Date().toISOString().split('T')[0];
@@ -245,7 +251,7 @@ export default function Statistics() {
       const dayOfWeek = startOfWeek.getDay();
       const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       startOfWeek.setDate(diff);
-      
+
       for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek);
         date.setDate(startOfWeek.getDate() + i);
@@ -258,23 +264,23 @@ export default function Statistics() {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      
+
       const firstMonday = new Date(startOfMonth);
       const dayOfWeek = firstMonday.getDay();
       const diffDays = firstMonday.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
       firstMonday.setDate(diffDays);
-      
+
       let weekStart = new Date(firstMonday);
       let weekCount = 0;
-      
+
       while (weekStart <= endOfMonth && weekCount < 6) {
         const startOfYear = new Date(weekStart.getFullYear(), 0, 1);
         const weekNum = Math.ceil(((weekStart.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
         const weekKey = `${weekStart.getFullYear()}-W${weekNum.toString().padStart(2, '0')}`;
-        
+
         const weekStats = productivity.weeklyStats[weekKey];
         if (weekStats) statsSource.push(weekStats);
-        
+
         weekStart.setDate(weekStart.getDate() + 7);
         weekCount++;
       }
@@ -297,7 +303,7 @@ export default function Statistics() {
     });
 
     const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
-    
+
     return Object.entries(tagTotals)
       .filter(([tag, minutes]) => tag && minutes > 0)
       .map(([tag, minutes], index) => ({
@@ -347,21 +353,31 @@ export default function Statistics() {
   const tagDistribution = getTagDistribution();
   const statCards = getStatCards();
 
+  // Show loading state while data is being fetched
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading statistics...</Text>
+        <Image  
+          source={require('@/assets/images/background.jpg')}
+          style={styles.backgroundImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+        <View style={styles.darkOverlay} />
+        <ActivityIndicator size="large" color="#B6917E" />
       </View>
     );
   }
 
   return (
-    <ImageBackground
+    <>
+    <Image
       source={require('@/assets/images/background.jpg')}
       style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <LinearGradient
+      cachePolicy="memory-disk"
+      contentFit="cover"
+    />
+    <LinearGradient
         colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
         style={styles.overlay}
       >
@@ -484,9 +500,9 @@ export default function Statistics() {
                       {new Date(item.startTime).toLocaleDateString()}
                     </Text>
                     <Text style={styles.sessionTime}>
-                      {new Date(item.startTime).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
+                      {new Date(item.startTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                     </Text>
                   </View>
@@ -507,7 +523,7 @@ export default function Statistics() {
           </View>
         </ScrollView>
       </LinearGradient>
-    </ImageBackground>
+    </>
   );
 }
 
@@ -526,7 +542,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+  },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   loadingText: {
     color: '#fff',

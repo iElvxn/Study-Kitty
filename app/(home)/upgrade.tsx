@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { Image } from 'expo-image';
 import { router } from "expo-router";
 import { memo, useCallback, useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from "../aws/client";
 import { getUser, setCachedUserData } from "../aws/users";
@@ -95,31 +95,52 @@ const UpgradeScreen = () => {
     const [isUpgrading, setIsUpgrading] = useState(false);
     const [user, setUser] = useState<UserRecord | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const { triggerRefresh } = useUpgrade();
+
+    // Preload images
+    useEffect(() => {
+        if (upgrades.length > 0) {
+            const imageUris = upgrades.flatMap(upgrade =>
+                Object.values(upgrade.levels).map(level => level.icon)
+            );
+            // Preload all images
+            Image.prefetch(imageUris);
+        }
+    }, [upgrades]);
 
     useEffect(() => {
         let isActive = true;
-        
+
         const fetchUpgrades = async () => {
+            setIsLoading(true);
             try {
                 const token = await getToken();
                 if (!token || !isActive) return;
-                const userData = await getUser(token);
+
+                const [userData, upgradeData] = await Promise.all([
+                    getUser(token),
+                    getUpgrades(token)
+                ]);
+
                 if (!isActive) return;
+
                 setUser(userData);
-                const upgrades = await getUpgrades(token);
-                if (!isActive) return;
-                setUpgrades(upgrades);
+                setUpgrades(upgradeData);
             } catch (err) {
                 if (isActive) {
                     setError('Failed to load upgrades');
                     console.error(err);
                 }
+            } finally {
+                if (isActive) {
+                    setIsLoading(false);
+                }
             }
         };
-        
+
         fetchUpgrades();
-        
+
         return () => {
             isActive = false;
         };
@@ -167,49 +188,65 @@ const UpgradeScreen = () => {
                 source={require('@/assets/images/background.jpg')}
                 style={styles.backgroundImage}
                 contentFit="cover"
-                cachePolicy="disk"
+                cachePolicy="memory-disk"
+                transition={200}
             />
             <View style={styles.darkOverlay} />
-            <View style={styles.content}>
-                <Text style={styles.title}>Cafe Upgrades</Text>
-                {user && (
-                    <View style={styles.coinsRow}>
-                        <Text style={styles.coinsText}>{user.coins}</Text>
-                        <Image 
-                            source={require('@/assets/images/coin.png')} 
-                            style={styles.coinIconImg}
-                            contentFit="contain"
-                            cachePolicy="disk"
-                        />
-                    </View>
-                )}
-                <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={[styles.error, { opacity: message ? 1 : 0 }]}>
-                        {message || ' '}
-                    </Text>
+
+            {isLoading ? (
+                <View style={styles.loadingContainer}>
+                    <Image
+                        source={require('@/assets/images/background.jpg')}
+                        style={styles.backgroundImage}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                    />
+                    <View style={styles.darkOverlay} />
+                    <ActivityIndicator size="large" color="#B6917E" />
                 </View>
-                <View style={styles.upgradeContainer}>
-                    {error && <Text style={styles.error}>{error}</Text>}
-                    {upgrades.map(upgrade => {
-                        const userCafeData = user?.cafes[user.currentCafe];
-                        const userCurrentLevel = userCafeData ? (userCafeData.upgrades as any)[upgrade.id] || 1 : 1;
-                        return (
-                            <UpgradeCard
-                                key={upgrade.id}
-                                upgrade={upgrade}
-                                onUpgrade={handleUpgrade}
-                                userCurrentLevel={userCurrentLevel}
+            ) : (
+                <View style={styles.content}>
+                    <Text style={styles.title}>Cafe Upgrades</Text>
+                    {user && (
+                        <View style={styles.coinsRow}>
+                            <Text style={styles.coinsText}>{user.coins}</Text>
+                            <Image
+                                source={require('@/assets/images/coin.png')}
+                                style={styles.coinIconImg}
+                                contentFit="contain"
+                                cachePolicy="memory-disk"
+                                transition={100}
                             />
-                        );
-                    })}
+                        </View>
+                    )}
+                    <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={[styles.error, { opacity: message ? 1 : 0 }]}>
+                            {message || ' '}
+                        </Text>
+                    </View>
+                    <View style={styles.upgradeContainer}>
+                        {error && <Text style={styles.error}>{error}</Text>}
+                        {upgrades.map(upgrade => {
+                            const userCafeData = user?.cafes[user.currentCafe];
+                            const userCurrentLevel = userCafeData ? (userCafeData.upgrades as any)[upgrade.id] || 1 : 1;
+                            return (
+                                <UpgradeCard
+                                    key={upgrade.id}
+                                    upgrade={upgrade}
+                                    onUpgrade={handleUpgrade}
+                                    userCurrentLevel={userCurrentLevel}
+                                />
+                            );
+                        })}
+                    </View>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                    >
+                        <Text style={{ color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18 }}>← Return to Cafe</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <Text style={{ color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18 }}>← Return to Cafe</Text>
-                </TouchableOpacity>
-            </View>
+            )}
         </View>
     );
 };
@@ -219,8 +256,7 @@ export default memo(UpgradeScreen);
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: '#1E1E1E', // Match your app's background color
     },
     backgroundImage: {
         position: 'absolute',
@@ -398,5 +434,16 @@ const styles = StyleSheet.create({
         textShadowColor: '#000',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 2,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1E1E1E',
+    },
+    loadingText: {
+        color: '#FFF5E6',
+        marginTop: 16,
+        fontSize: 16,
     },
 });

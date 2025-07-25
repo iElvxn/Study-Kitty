@@ -2,8 +2,8 @@ import { useAuth } from "@clerk/clerk-expo";
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image as ExpoImage } from 'expo-image';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Dimensions, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { getUser } from '@/app/aws/users';
 import { CatData, getAllCats } from '@/app/gameData/catData';
@@ -32,8 +32,42 @@ export default function PurrdexScreen() {
   const [showOwnedOnly, setShowOwnedOnly] = useState(false);
   const [userCats, setUserCats] = useState<Record<string, { quantity: number; rarity: string }>>({});
   const [loading, setLoading] = useState(true);
+  const [areImagesLoaded, setAreImagesLoaded] = useState(false);
 
-  const allCats = getAllCats();
+  const allCats = useMemo(() => getAllCats(), []);
+
+  // Preload cat images
+  useEffect(() => {
+    let isMounted = true;
+    
+    const preloadImages = async () => {
+      try {
+        if (allCats.length > 0) {
+          const imageUris = allCats.map(cat => 
+            typeof cat.animation === 'string' ? cat.animation : 
+            typeof cat.animation === 'object' && cat.animation?.uri ? cat.animation.uri : 
+            null
+          ).filter(Boolean) as string[];
+          
+          if (imageUris.length > 0) {
+            await ExpoImage.prefetch(imageUris);
+          }
+        }
+      } catch (error) {
+        console.error('Error preloading images:', error);
+      } finally {
+        if (isMounted) {
+          setAreImagesLoaded(true);
+        }
+      }
+    };
+
+    preloadImages();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [allCats]);
 
   // Fetch user data when screen comes into focus
   useFocusEffect(
@@ -152,6 +186,22 @@ export default function PurrdexScreen() {
   const ownedCount = Object.values(userCats).reduce((sum: number, cat: { quantity: number; rarity: string }) => sum + (Number(cat.quantity) > 0 ? 1 : 0), 0);
   const totalCount = allCats.length;
 
+  // Show loading state while data is being fetched
+  if (loading || !areImagesLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ExpoImage
+          source={require('@/assets/images/background.jpg')}
+          style={styles.backgroundImage}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+        <View style={styles.darkOverlay} />
+        <ActivityIndicator size="large" color="#B6917E" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ExpoImage
@@ -225,18 +275,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
   },
   darkOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   content: {
@@ -411,5 +453,10 @@ const styles = StyleSheet.create({
     color: '#2D1810',
     marginLeft: 5,
     fontFamily: 'Quicksand_500Medium',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 
