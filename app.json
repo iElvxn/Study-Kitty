@@ -4,7 +4,7 @@
     "slug": "Study-Kitty",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/cat-cafe-banner.png",
     "scheme": "studykitty",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
