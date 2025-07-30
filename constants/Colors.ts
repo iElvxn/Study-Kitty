@@ -2,7 +2,7 @@
  * Below are the colors that are used in the app.
  */
 
-const tintColor = '#0a7ea4';
+const tintColor = '#786FA6';
 
 export const Colors = {
   text: '#FFFFFF',

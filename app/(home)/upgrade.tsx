@@ -104,7 +104,6 @@ const UpgradeScreen = () => {
             const imageUris = upgrades.flatMap(upgrade =>
                 Object.values(upgrade.levels).map(level => level.icon)
             );
-            // Preload all images
             Image.prefetch(imageUris);
         }
     }, [upgrades]);
