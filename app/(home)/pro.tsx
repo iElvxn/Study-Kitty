@@ -5,8 +5,9 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
 type SubscriptionTier = {
     id: string;
@@ -31,6 +32,25 @@ export default function Pro() {
     const { width: screenWidth } = useWindowDimensions();
     const flatListRef = useRef<FlatList>(null);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [offerings, setOfferings] = useState<any>(null);
+
+    useEffect(() => {
+        //getOfferings()
+    }, [])
+
+    const getOfferings = async () => {
+        try {
+            const offerings = await Purchases.getOfferings();
+
+            if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
+                console.log("Offeringssss", JSON.stringify(offerings))
+                setOfferings(offerings);
+            }
+        } catch (error) {
+            console.error("Error fetching offerings:", error);
+            // Don't crash the app, just log the error
+        }
+    }
 
     // Carousel data - you can add more images here
     const carouselData: CarouselItem[] = [
@@ -52,7 +72,7 @@ export default function Pro() {
             title: 'Custom Tags',
             description: 'Tag your sessions to see how your time is being spent.'
         },
-        
+
     ];
 
     const subscriptionTiers: SubscriptionTier[] = [
@@ -84,10 +104,18 @@ export default function Pro() {
         }
     ];
 
-    const handleSubscribe = async (tierId: string) => {
-        // TODO: Implement subscription logic with your payment provider
-        console.log(`Subscribing to ${tierId} tier`);
-    };
+    const handleSubscribe = async (pkg: PurchasesPackage) => {
+        try {
+            const customerInfo = await Purchases.getCustomerInfo();
+            if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
+                // Grant user "pro" access
+                console.log("Customer Info", JSON.stringify(customerInfo))
+            }
+        } catch (e) {
+            // Error fetching purchaser info
+            console.log("error", e)
+        }
+    }
 
     const renderCarouselItem = ({ item }: { item: CarouselItem }) => (
         <View style={[styles.carouselItem, { width: screenWidth }]}>

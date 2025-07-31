@@ -3,6 +3,7 @@ import { TimerProvider } from '@/context/TimerContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
+import Purchases from 'react-native-purchases';
 import { initializeUser } from '../aws/users';
 
 export default function AuthRoutesLayout() {
@@ -29,6 +30,37 @@ export default function AuthRoutesLayout() {
 
     initializeUserAfterAuth();
   }, [isSignedIn]);
+
+  //for pro
+  // useEffect(() => {
+  //   const initializePurchases = async () => {
+  //     try {
+  //       Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+  //       if (Platform.OS === 'ios') {
+  //         Purchases.configure({
+  //           apiKey: "appl_MXGKbHagpEJVmmLaHEPltAQJcPz"
+  //         });
+  //       }
+        
+  //       await getCustomerInfo();
+  //     } catch (error) {
+  //       console.error('Error initializing purchases:', error);
+  //     }
+  //   };
+
+  //   initializePurchases();
+  // }, []);
+
+  const getCustomerInfo = async () => {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      console.log("customerInfo", JSON.stringify(customerInfo, null, 2));
+    } catch (error) {
+      console.error('Error getting customer info:', error);
+    }
+  }
+
 
   if (!isSignedIn) {
     return <Redirect href="/(auth)/index" />;

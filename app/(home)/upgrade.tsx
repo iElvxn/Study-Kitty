@@ -45,6 +45,7 @@ const UpgradeCard = memo(({ upgrade, onUpgrade, userCurrentLevel }: { upgrade: U
                     style={styles.upgradeImage}
                     contentFit="contain"
                     cachePolicy="disk"
+                    priority="normal"
                 />
             )}
             <View style={styles.upgradeInfoContainer}>
@@ -98,15 +99,12 @@ const UpgradeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { triggerRefresh } = useUpgrade();
 
-    // Preload images
+    // Only preload background image, not all upgrade images
     useEffect(() => {
-        if (upgrades.length > 0) {
-            const imageUris = upgrades.flatMap(upgrade =>
-                Object.values(upgrade.levels).map(level => level.icon)
-            );
-            Image.prefetch(imageUris);
-        }
-    }, [upgrades]);
+        Image.prefetch(require('@/assets/images/background.jpg'));
+    }, []);
+
+    // No aggressive cleanup - let React Native handle memory naturally
 
     useEffect(() => {
         let isActive = true;
@@ -163,8 +161,9 @@ const UpgradeScreen = () => {
                     if (!token) throw new Error('No token');
                     const res = await apiRequest("/upgrades", "POST", token, body); // to purchase upgrade
                     if (res.statusCode === 200) {
-                        setUser(res.data.user);
-                        await setCachedUserData(res.data.user);
+                        const responseData = res.data as { user: UserRecord };
+                        setUser(responseData.user);
+                        await setCachedUserData(responseData.user);
                         triggerRefresh(); // Notify furniture to refresh
                     } else {
                         console.error("Upgrade failed:", res.statusCode, res.data);
@@ -187,7 +186,8 @@ const UpgradeScreen = () => {
                 source={require('@/assets/images/background.jpg')}
                 style={styles.backgroundImage}
                 contentFit="cover"
-                cachePolicy="memory-disk"
+                cachePolicy="disk"
+                priority="low"
                 transition={200}
             />
             <View style={styles.darkOverlay} />
@@ -198,7 +198,7 @@ const UpgradeScreen = () => {
                         source={require('@/assets/images/background.jpg')}
                         style={styles.backgroundImage}
                         contentFit="cover"
-                        cachePolicy="memory-disk"
+                        cachePolicy="disk"
                     />
                     <View style={styles.darkOverlay} />
                     <ActivityIndicator size="large" color="#B6917E" />
@@ -209,13 +209,14 @@ const UpgradeScreen = () => {
                     {user && (
                         <View style={styles.coinsRow}>
                             <Text style={styles.coinsText}>{user.coins}</Text>
-                            <Image
-                                source={require('@/assets/images/coin.png')}
-                                style={styles.coinIconImg}
-                                contentFit="contain"
-                                cachePolicy="memory-disk"
-                                transition={100}
-                            />
+                                            <Image
+                    source={require('@/assets/images/coin.png')}
+                    style={styles.coinIconImg}
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                    priority="high"
+                    transition={100}
+                />
                         </View>
                     )}
                     <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>
