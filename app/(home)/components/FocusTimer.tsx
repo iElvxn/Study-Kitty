@@ -21,6 +21,48 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
   const [awayStartTime, setAwayStartTime] = useState<number | null>(null);
   const [wasAwayTooLong, setWasAwayTooLong] = useState(false);
 
+  // Handle app state changes for away detection and timer completion
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // App came to foreground
+        if (awayStartTime && isActive) {
+          const timeAway = Date.now() - awayStartTime;
+          const secondsAway = Math.floor(timeAway / 1000);
+
+          if (secondsAway > AWAY_TIME_LIMIT) {
+            setWasAwayTooLong(true);
+
+            // Stop the timer immediately
+            BackgroundTimer.stop();
+            setIsActive(false);
+            setTime(initialTime);
+          }
+        }
+        setAwayStartTime(null);
+
+        // Handle timer completion when returning from background
+        if (isActive && time === 0) {
+          if (!wasAwayTooLong) {
+            onComplete?.();
+          }
+          setIsActive(false);
+          setTime(initialTime);
+          setWasAwayTooLong(false);
+        }
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // App went to background
+        if (isActive) {
+          setAwayStartTime(Date.now());
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isActive, awayStartTime, initialTime, time, onComplete, wasAwayTooLong]);
+
+  // Handle timer countdown
   useEffect(() => {
     let interval: number;
 
@@ -30,7 +72,8 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
       interval = BackgroundTimer.setInterval(() => {
         setTime((prevTime) => prevTime - 1);
       }, 1000);
-    } else if (isActive && time === 0) {       // Timer completed!
+    } else if (isActive && time === 0) {
+      // Timer completed!
       BackgroundTimer.stop();
 
       // Only call onComplete if user wasn't away too long
@@ -57,55 +100,6 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
       }
     };
   }, [isActive, time, initialTime, onStateChange, onComplete, wasAwayTooLong]);
-
-  // Handle app state changes for away detection
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'active') {
-        // App came to foreground
-        if (awayStartTime && isActive) {
-          const timeAway = Date.now() - awayStartTime;
-          const secondsAway = Math.floor(timeAway / 1000);
-
-          if (secondsAway > AWAY_TIME_LIMIT) {
-            setWasAwayTooLong(true);
-
-            // Stop the timer immediately
-            BackgroundTimer.stop();
-            setIsActive(false);
-            setTime(initialTime);
-          }
-        }
-        setAwayStartTime(null);
-      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
-        // App went to background
-        if (isActive) {
-          setAwayStartTime(Date.now());
-        }
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [isActive, awayStartTime, initialTime]);
-
-  // Handle timer completion when user returns from background
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'active' && isActive && time === 0) {         // Timer finished while user was away
-        if (!wasAwayTooLong) {
-          onComplete?.();
-        }
-        console.log("cooked")
-        setIsActive(false);
-        setTime(initialTime);
-        setWasAwayTooLong(false);
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [isActive, time, onComplete, initialTime, wasAwayTooLong]);
 
   // Notify parent when session time changes
   useEffect(() => {
