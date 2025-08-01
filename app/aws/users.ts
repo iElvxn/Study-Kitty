@@ -27,7 +27,7 @@ export const setCachedUserData = async (userData: UserRecord): Promise<void> => 
     }
 };
 
-const clearUserCache = async (): Promise<void> => {
+export const clearUserCache = async (): Promise<void> => {
     try {
         AsyncStorage.removeItem("userData");
         console.log('User cache cleared');

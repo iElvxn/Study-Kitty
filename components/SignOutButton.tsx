@@ -16,6 +16,7 @@ export const SignOutButton = ({ onSignOut }: SignOutButtonProps) => {
 
   const handleSignOut = async () => {
     try {
+      console.log("attempting to sign out")
       await clearUserCache()
       await signOut()
       onSignOut?.()
