@@ -113,7 +113,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/background.jpg')}
+        source={require('@/assets/images/Scaled Background.jpg')}
         style={styles.backgroundImage}
         contentFit="contain"
         cachePolicy="disk"

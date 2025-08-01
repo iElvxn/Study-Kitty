@@ -66,12 +66,10 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 const upgradeLevels = await fetchUserUpgrades(token);
 
                 // Base spots with positions adjusted for 1170x2532 → 1125x2436 scaling
-                const screenScaleX = 1125 / windowWidth; 
-                const screenScaleY = 2436 / windowHeight;
                 let spots: CatSpot[] = [
-                    { x: 255 * screenScaleX, y: 280 * screenScaleY },
-                    { x: 215 * screenScaleX, y: 335 * screenScaleY },
-                    { x: 212 * screenScaleX, y: 440 * screenScaleY },
+                    { x: 255, y: 280 },
+                    { x: 215, y: 335 },
+                    { x: 212, y: 440 },
                 ];
 
                 upgradeLevels && Object.entries(upgradeLevels).forEach(([upgradeId, level]) => {
@@ -81,11 +79,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                             const levelData = upgrade.levels[currentLevel];
                             if (levelData.catSpots) {
                                 levelData.catSpots.forEach(newSpot => {
-                                    const scaledX = newSpot.x * screenScaleX;
-                                    const scaledY = newSpot.y * screenScaleY;
-                                    const scaledSpot = { x: scaledX, y: scaledY };
-                                    if (!spots.some(s => s.x === scaledSpot.x && s.y === scaledSpot.y)) {
-                                        spots.push(scaledSpot);
+                                    if (!spots.some(s => s.x === newSpot.x && s.y === newSpot.y)) {
+                                        spots.push(newSpot);
                                     }
                                 });
                             }
@@ -167,8 +162,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                     return currentCats;
                 }
                 
-                const screenScaleX = windowWidth / 1125; 
-                const screenScaleY = windowHeight / 2436;
+                const screenScaleX = windowWidth / 1170; 
+                const screenScaleY = windowHeight / 2532;
                 randomSpot.x = Math.floor(randomSpot.x * screenScaleX);
                 randomSpot.y = Math.floor(randomSpot.y * screenScaleY);
 
