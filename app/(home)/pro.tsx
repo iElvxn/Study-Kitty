@@ -105,16 +105,16 @@ export default function Pro() {
     ];
 
     const handleSubscribe = async (pkg: PurchasesPackage) => {
-        try {
-            const customerInfo = await Purchases.getCustomerInfo();
-            if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
-                // Grant user "pro" access
-                console.log("Customer Info", JSON.stringify(customerInfo))
-            }
-        } catch (e) {
-            // Error fetching purchaser info
-            console.log("error", e)
-        }
+        // try {
+        //     const customerInfo = await Purchases.getCustomerInfo();
+        //     if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
+        //         // Grant user "pro" access
+        //         console.log("Customer Info", JSON.stringify(customerInfo))
+        //     }
+        // } catch (e) {
+        //     // Error fetching purchaser info
+        //     console.log("error", e)
+        // }
     }
 
     const renderCarouselItem = ({ item }: { item: CarouselItem }) => (

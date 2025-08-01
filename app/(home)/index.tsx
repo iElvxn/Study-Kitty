@@ -82,7 +82,6 @@ export default function HomeScreen() {
         console.log("No token?");
         return;
       }
-      console.log("Selected tag:asd", selectedTag);
       const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag });
       const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
       const newBalance = data.newBalance;

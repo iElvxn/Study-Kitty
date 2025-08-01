@@ -1,6 +1,8 @@
 import Slider from '@react-native-community/slider';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// @ts-ignore
+import BackgroundTimer from 'react-native-background-timer';
 
 interface FocusTimerProps {
   onStateChange?: (isActive: boolean) => void;
@@ -9,24 +11,38 @@ interface FocusTimerProps {
 }
 
 export default function FocusTimer({ onStateChange, onSessionTimeChange, onComplete }: FocusTimerProps) {
+  const AWAY_TIME_LIMIT = 5; // seconds
+  const DEFAULT_TIMER_TIME = 25 * 60; // seconds
+  const MAX_TIMER_TIME = 120 * 60; // seconds
+
   const [isActive, setIsActive] = useState(false);
-  const [time, setTime] = useState(25 * 60);
-  const [initialTime, setInitialTime] = useState(25 * 60);
+  const [time, setTime] = useState(DEFAULT_TIMER_TIME);
+  const [initialTime, setInitialTime] = useState(DEFAULT_TIMER_TIME);
+  const [awayStartTime, setAwayStartTime] = useState<number | null>(null);
+  const [wasAwayTooLong, setWasAwayTooLong] = useState(false);
 
   useEffect(() => {
     let interval: number;
 
-    //count down the seconds
+    //count down the seconds using background timer
     if (isActive && time > 0) {
-      interval = setInterval(() => {
+      BackgroundTimer.start();
+      interval = BackgroundTimer.setInterval(() => {
         setTime((prevTime) => prevTime - 1);
       }, 1000);
-    } else if (isActive && time === 0) {
-      // Timer completed!
-      onComplete?.(); // Call the callback
+    } else if (isActive && time === 0) {       // Timer completed!
+      BackgroundTimer.stop();
+
+      // Only call onComplete if user wasn't away too long
+      if (!wasAwayTooLong) {
+        onComplete?.();
+      }
+
       setIsActive(false);
       setTime(initialTime);
+      setWasAwayTooLong(false); // Reset for next session
     } else {
+      BackgroundTimer.stop();
       setIsActive(false);
       setTime(initialTime);
     }
@@ -36,10 +52,60 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
 
     return () => {
       if (interval) {
-        clearInterval(interval);
+        BackgroundTimer.clearInterval(interval);
+        BackgroundTimer.stop();
       }
     };
-  }, [isActive, time, initialTime, onStateChange, onComplete]);
+  }, [isActive, time, initialTime, onStateChange, onComplete, wasAwayTooLong]);
+
+  // Handle app state changes for away detection
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // App came to foreground
+        if (awayStartTime && isActive) {
+          const timeAway = Date.now() - awayStartTime;
+          const secondsAway = Math.floor(timeAway / 1000);
+
+          if (secondsAway > AWAY_TIME_LIMIT) {
+            setWasAwayTooLong(true);
+
+            // Stop the timer immediately
+            BackgroundTimer.stop();
+            setIsActive(false);
+            setTime(initialTime);
+          }
+        }
+        setAwayStartTime(null);
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // App went to background
+        if (isActive) {
+          setAwayStartTime(Date.now());
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isActive, awayStartTime, initialTime]);
+
+  // Handle timer completion when user returns from background
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && isActive && time === 0) {         // Timer finished while user was away
+        if (!wasAwayTooLong) {
+          onComplete?.();
+        }
+        console.log("cooked")
+        setIsActive(false);
+        setTime(initialTime);
+        setWasAwayTooLong(false);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isActive, time, onComplete, initialTime, wasAwayTooLong]);
 
   // Notify parent when session time changes
   useEffect(() => {
@@ -64,44 +130,68 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.timerText}>{formatTime()}</Text>
-      {isActive ? (
-        <View style={styles.progressBarContainer}>
-          <View style={styles.progressBarBackground}>
-            <View 
-              style={[
-                styles.progressBar,
-                { width: `${((initialTime - time) / initialTime) * 100}%` }
-              ]}
-            />
+    <>
+      <Modal
+        visible={wasAwayTooLong}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setWasAwayTooLong(false)}
+        accessible
+        accessibilityViewIsModal
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Session Stopped! 😿</Text>
+            <Text style={styles.modalText}>You were away for too long during your study session. Try again and stay focused!</Text>
+            <Pressable
+              style={({ pressed }) => [styles.closeButton, pressed && { opacity: 0.7 }]}
+              onPress={() => setWasAwayTooLong(false)}
+              accessibilityLabel="Close reward modal"
+            >
+              <Text style={styles.closeButtonText}>Yay!</Text>
+            </Pressable>
           </View>
         </View>
-      ) 
-      : 
-      (
-        <Slider
-          style={{ width: 225, height: 10 }}
-          value={time}
-          minimumValue={0}
-          maximumValue={120 * 60}
-          step={60}
-          onValueChange={handleSliderChange}
-          minimumTrackTintColor="#F9E4BC"
-          maximumTrackTintColor="rgba(249, 228, 188, 0.3)"
-          thumbTintColor="#F9E4BC"
-        />
-      )}
+      </Modal>
+      <View style={styles.container}>
+        <Text style={styles.timerText}>{formatTime()}</Text>
+        {isActive ? (
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              <View
+                style={[
+                  styles.progressBar,
+                  { width: `${((initialTime - time) / initialTime) * 100}%` }
+                ]}
+              />
+            </View>
+          </View>
+        )
+          :
+          (
+            <Slider
+              style={{ width: 225, height: 10 }}
+              value={time}
+              minimumValue={0}
+              maximumValue={MAX_TIMER_TIME}
+              step={60}
+              onValueChange={handleSliderChange}
+              minimumTrackTintColor="#F9E4BC"
+              maximumTrackTintColor="rgba(249, 228, 188, 0.3)"
+              thumbTintColor="#F9E4BC"
+            />
+          )}
 
-      <TouchableOpacity 
-        style={[styles.button, isActive ? styles.stopButton : styles.startButton]} 
-        onPress={toggleTimer}
-      >
-        <Text style={styles.buttonText}>
-          {isActive ? 'Give Up' : 'Start'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.button, isActive ? styles.stopButton : styles.startButton]}
+          onPress={toggleTimer}
+        >
+          <Text style={styles.buttonText}>
+            {isActive ? 'Give Up' : 'Start'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
 
@@ -163,5 +253,56 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#E6D5BC',
     opacity: 0.7,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: 350,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#FFF5E6',
+    alignItems: 'center',
+    padding: 30,
+    borderWidth: 3,
+    borderColor: 'rgb(87, 53, 25)',
+    shadowColor: '#2D1810',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D1810',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalText: {
+    textAlign: "center",
+    fontSize: 20,
+    color: '#2D1810',
+    marginBottom: 10,
+    fontFamily: 'Quicksand_500Medium',
+  },
+  closeButton: {
+    backgroundColor: '#B6917E',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#FFF5E6',
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
   },
 }); 
