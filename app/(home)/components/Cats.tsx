@@ -6,7 +6,7 @@ import { CatSpot } from '@/app/models/upgrade';
 import { useAuth } from '@clerk/clerk-expo';
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import { fetchUserUpgrades, getUpgrades } from '../upgrade';
 
 
@@ -23,6 +23,9 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const intervalRef = useRef<number | null>(null);
     const ownedCatsRef = useRef<CatRecord[]>([]);
     const spotsRef = useRef<CatSpot[]>([]);
+
+    const windowWidth = Dimensions.get('window').width;
+    const windowHeight = Dimensions.get('window').height;
 
     const startInterval = () => {
         if (intervalRef.current) {
@@ -62,21 +65,27 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 const cafeData = await getUpgrades(token)
                 const upgradeLevels = await fetchUserUpgrades(token);
 
+                // Base spots with positions adjusted for 1170x2532 → 1125x2436 scaling
+                const screenScaleX = 1125 / windowWidth; 
+                const screenScaleY = 2436 / windowHeight;
                 let spots: CatSpot[] = [
-                    { x: 255, y: 280 },
-                    { x: 215, y: 335 },
-                    { x: 212, y: 440 },
+                    { x: 255 * screenScaleX, y: 280 * screenScaleY },
+                    { x: 215 * screenScaleX, y: 335 * screenScaleY },
+                    { x: 212 * screenScaleX, y: 440 * screenScaleY },
                 ];
+
                 upgradeLevels && Object.entries(upgradeLevels).forEach(([upgradeId, level]) => {
                     for (let currentLevel = 2; currentLevel <= (level as any); currentLevel++) {
                         const upgrade = cafeData.find(u => u.id === upgradeId);
                         if (upgrade) {
                             const levelData = upgrade.levels[currentLevel];
                             if (levelData.catSpots) {
-                                // Only add spots that are not already in the array
                                 levelData.catSpots.forEach(newSpot => {
-                                    if (!spots.some(s => s.x === newSpot.x && s.y === newSpot.y)) {
-                                        spots.push(newSpot);
+                                    const scaledX = newSpot.x * screenScaleX;
+                                    const scaledY = newSpot.y * screenScaleY;
+                                    const scaledSpot = { x: scaledX, y: scaledY };
+                                    if (!spots.some(s => s.x === scaledSpot.x && s.y === scaledSpot.y)) {
+                                        spots.push(scaledSpot);
                                     }
                                 });
                             }
@@ -157,6 +166,11 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                     console.log("Cat data not found for:", randomCat.id);
                     return currentCats;
                 }
+                
+                const screenScaleX = windowWidth / 1125; 
+                const screenScaleY = windowHeight / 2436;
+                randomSpot.x = Math.floor(randomSpot.x * screenScaleX);
+                randomSpot.y = Math.floor(randomSpot.y * screenScaleY);
 
                 const cat: Cat = {
                     id: catData.id,
