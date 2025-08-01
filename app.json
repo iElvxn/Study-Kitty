@@ -4,7 +4,7 @@
     "slug": "Study-Kitty",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/cat-cafe-banner.png",
+    "icon": "./assets/images/Study Kitty Icon.jpg",
     "scheme": "studykitty",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -38,7 +38,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "experiments": {
       "typedRoutes": true

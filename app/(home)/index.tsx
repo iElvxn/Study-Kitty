@@ -1,6 +1,7 @@
 import { useTimer } from '@/context/TimerContext';
 import { useAuth } from "@clerk/clerk-expo";
 import { useFocusEffect } from '@react-navigation/native';
+import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -27,6 +28,9 @@ export default function HomeScreen() {
   const [showTagsModal, setShowTagsModal] = useState(false);
   const [earnedAmount, setEarnedAmount] = useState(0);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  const chimeSound = require('@/assets/chime.mp3');
+  const audioPlayer = useAudioPlayer(chimeSound);
 
 
   const completionQuotes: String[] = [
@@ -92,7 +96,9 @@ export default function HomeScreen() {
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
-
+      audioPlayer.seekTo(0);
+      audioPlayer.play();
+      console.log("Audio played");
       // Update the cache
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
@@ -159,8 +165,8 @@ export default function HomeScreen() {
       </Modal>
 
       {showTagsModal && (
-        <Tags 
-          setShowTagsModal={setShowTagsModal} 
+        <Tags
+          setShowTagsModal={setShowTagsModal}
           onTagsUpdate={(selectedTag: string | null) => {
             setSelectedTag(selectedTag);
           }}
@@ -186,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   homeButtons: {
-    width: '100%',  
+    width: '100%',
     padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
