@@ -217,7 +217,7 @@ export default function SignUpScreen() {
           style={styles.input}
           autoCapitalize="none"
           value={emailAddress}
-          placeholder="Work Email"
+          placeholder="Email"
           placeholderTextColor="#666"
           onChangeText={(email) => setEmailAddress(email)}
         />
