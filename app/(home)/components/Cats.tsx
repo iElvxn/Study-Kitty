@@ -18,7 +18,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const [userCats, setUserCats] = useState<CatRecord[]>([]);
     const [ownedCats, setOwnedCats] = useState<CatRecord[]>([]);
     const [cats, setCats] = useState<Cat[]>([]);
-    const [spots, setSpots] = useState<CatSpot[]>([{x: 150, y: 150}]);
+    const [spots, setSpots] = useState<CatSpot[]>([{ x: 150, y: 150 }]);
     const { getToken } = useAuth();
     const intervalRef = useRef<number | null>(null);
     const ownedCatsRef = useRef<CatRecord[]>([]);
@@ -26,18 +26,20 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
 
     const windowWidth = Dimensions.get('window').width;
     const windowHeight = Dimensions.get('window').height;
+    const BASE_WIDTH = 390;  // iPhone 13 width
+    const BASE_HEIGHT = 844; // iPhone 13 height
 
     const startInterval = () => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
         }
-        
+
         // Calculate spawn interval: session length / total cat spots
         const totalSpots = spotsRef.current.length;
         const spawnInterval = totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
-        
+
         console.log(`Session length: ${sessionTime}s, Total spots: ${totalSpots}, Spawn interval: ${spawnInterval}ms`);
-        
+
         intervalRef.current = setInterval(() => {
             spawnCat();
         }, spawnInterval);
@@ -59,7 +61,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 // Get users cats
                 const token = await getToken();
                 if (!token || !isActive) return;
-                
+
                 const userData = await getUser(token);
 
                 const cafeData = await getUpgrades(token)
@@ -101,29 +103,29 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                         quantity: data.quantity
                     };
                 });
-                
+
                 setUserCats(catsArray);
-                
+
                 // Pre-filter owned cats for optimal random selection
                 const ownedCatsArray = catsArray.filter(cat => Number(cat.quantity) > 0);
                 setOwnedCats(ownedCatsArray);
                 ownedCatsRef.current = ownedCatsArray; // Update ref
-                
+
                 // Start the cat spawning intervals
                 startInterval();
-                
+
                 // Spawn first cat immediately
                 setTimeout(() => {
                     spawnCat();
                 }, 100);
-                
+
             } catch (error) {
                 console.error('Error initializing cats:', error);
             }
         };
-        
+
         initializeCats();
-        
+
         return () => {
             isActive = false;
             stopInterval();
@@ -161,11 +163,10 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                     console.log("Cat data not found for:", randomCat.id);
                     return currentCats;
                 }
-                
-                const screenScaleX = windowWidth / 1170; 
-                const screenScaleY = windowHeight / 2532;
-                randomSpot.x = Math.floor(randomSpot.x * screenScaleX);
-                randomSpot.y = Math.floor(randomSpot.y * screenScaleY);
+
+                const screenScaleX = windowWidth / BASE_WIDTH;
+                const screenScaleY = windowHeight / BASE_HEIGHT;
+                const scaledSpot = { x: Math.round(randomSpot.x * screenScaleX), y: Math.round(randomSpot.y * screenScaleY) };
 
                 const cat: Cat = {
                     id: catData.id,
@@ -173,10 +174,11 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                     rarity: catData.rarity,
                     state: 'sleeping',
                     spot: randomSpot,
+                    scaledSpot: scaledSpot,
                     animation: isReversed ? catData.reverse : catData.animation
                 };
 
-                console.log(`Spawned ${cat.name} at position (${randomSpot.x}, ${randomSpot.y})`);
+                console.log(`Spawned ${cat.name} at position (${scaledSpot.x}, ${scaledSpot.y})`);
                 return [...currentCats, cat];
             } else {
                 // Stop interval when no spots available
@@ -193,7 +195,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 <Image
                     key={`cat-${cat.spot.x}-${cat.spot.y}-${index}`}
                     source={cat.animation}
-                    style={{ position: 'absolute', left: cat.spot.x, top: cat.spot.y, width: 60, height: 60 }}
+                    style={{ position: 'absolute', left: cat.scaledSpot.x, top: cat.scaledSpot.y, width: 60, height: 60 }}
                     contentFit="contain"
                 />
             ))}
