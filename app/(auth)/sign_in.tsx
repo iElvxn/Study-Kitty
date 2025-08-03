@@ -15,6 +15,7 @@ export default function SignInScreen() {
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   WebBrowser.maybeCompleteAuthSession()
 
@@ -71,6 +72,9 @@ export default function SignInScreen() {
   const onSignInPress = async () => {
     if (!isLoaded) return;
 
+    // Clear any previous errors
+    setError('');
+
     try {
       const signInAttempt = await signIn.create({
         identifier: emailAddress,
@@ -79,14 +83,21 @@ export default function SignInScreen() {
 
       if (signInAttempt.status === 'complete') {
         await setActive({ session: signInAttempt.createdSessionId });
-        
-        // Create user data after successful authentication        
         router.replace('/(home)');
       } else {
         console.error(JSON.stringify(signInAttempt, null, 2));
       }
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+    } catch (err: any) {
+      //console.error(JSON.stringify(err, null, 2));
+      if (err?.errors?.[0]?.code === 'form_identifier_not_found') {
+        setError('No account found with this email address');
+      } else if (err?.errors?.[0]?.code === 'form_password_incorrect') {
+        setError('Incorrect password');
+      } else if (err?.errors?.[0]?.code === 'form_param_nil' || err?.errors?.[0]?.code === 'form_conditional_param_missing') {
+        setError('Please fill in all fields');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
 
@@ -99,44 +110,46 @@ export default function SignInScreen() {
       <View style={styles.topSection}>
         <View style={styles.header}>
           <TouchableOpacity onPress={handleBackPress}>
-            <IconSymbol name="chevron.left" size={24} color="#000"/>
+            <IconSymbol name="chevron.left" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: '#000' , fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold'}]}>Lets Sign You In</Text>
-          <Text style={[styles.title, { color: '#000' , fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular'}]}>Return to your cat cafe focus zone
+          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold' }]}>Lets Sign You In</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular' }]}>Return to your cat cafe focus zone
           </Text>
         </View>
       </View>
 
       <View style={styles.bottomSection}>
-        <TextInput
-          style={styles.input}
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Email"
-          placeholderTextColor="#666"
-          onChangeText={(email) => setEmailAddress(email)}
-        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            autoCapitalize="none"
+            value={emailAddress}
+            placeholder="Email"
+            onChangeText={(email) => setEmailAddress(email)}
+            style={styles.input}
+          />
+        </View>
 
         <View style={styles.passwordContainer}>
           <TextInput
-            style={[styles.input, styles.passwordInput]}
             value={password}
             placeholder="Password"
-            placeholderTextColor="#666"
             secureTextEntry={!showPassword}
             onChangeText={(pass) => setPassword(pass)}
+            style={[styles.input, styles.passwordInput]}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.passwordToggle}
             onPress={() => setShowPassword(!showPassword)}
           >
-            <IconSymbol 
-              name={showPassword ? "eye.slash" : "eye"} 
-              size={20} 
+            <IconSymbol
+              name={showPassword ? "eye.slash" : "eye"}
+              size={20}
               color="#666"
             />
           </TouchableOpacity>
         </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity style={styles.continueButton} onPress={onSignInPress}>
           <Text style={styles.continueButtonText}>Sign In with Email</Text>
@@ -276,5 +289,10 @@ const styles = StyleSheet.create({
     right: 16,
     top: '50%',
     transform: [{ translateY: -10 }],
+  },
+  errorText: {
+    color: 'red',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

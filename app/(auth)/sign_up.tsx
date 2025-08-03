@@ -17,6 +17,7 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState('');
+  const [error, setError] = React.useState('');
 
   const inputRefs = React.useRef<TextInput[]>([]);
   const [codeDigits, setCodeDigits] = React.useState(['', '', '', '', '', '']);
@@ -72,7 +73,7 @@ export default function SignUpScreen() {
   // Handle individual digit input
   const handleDigitChange = (text: string, index: number) => {
     if (text.length > 1) text = text[0]; // Only take first character if multiple entered
-    
+
     const newCodeDigits = [...codeDigits];
     newCodeDigits[index] = text;
     setCodeDigits(newCodeDigits);
@@ -98,6 +99,9 @@ export default function SignUpScreen() {
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
+    // Clear any previous errors
+    setError('');
+
     try {
       await signUp.create({
         emailAddress,
@@ -106,11 +110,25 @@ export default function SignUpScreen() {
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setPendingVerification(true);
-    } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+    } catch (err: any) {
+      //console.error(JSON.stringify(err, null, 2));
+      if (err?.errors?.[0]?.code === 'form_identifier_exists') {
+        setError('An account with this email already exists');
+      } else if (err?.errors?.[0]?.code === 'form_password_length_too_short') {
+        setError('Password must be at least 8 characters');
+      } else if (err?.errors?.[0]?.code === 'form_password_pwned') {
+        setError('This password has been compromised in a data breach. Please choose a different one.');
+      } else if (err?.errors?.[0]?.code === 'form_param_nil' || err?.errors?.[0]?.code === 'form_conditional_param_missing') {
+        setError('Please fill in all fields');
+      } else if (err?.errors?.[0]?.code === 'form_password_validation_failed') {
+        setError('Password does not meet requirements');
+      } else if (err?.errors?.[0]?.code === 'form_param_format_invalid') {
+        setError('Email is invalid');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
-
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
@@ -121,15 +139,21 @@ export default function SignUpScreen() {
         code,
       });
 
-      if (signUpAttempt.status === 'complete') { //sign up complete
-        console.log("signing in")
+      if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
         router.replace('/(home)');
       } else {
         console.error(JSON.stringify(signUpAttempt, null, 2));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
+      if (err?.errors?.[0]?.code === 'form_code_incorrect') {
+        setError('Incorrect verification code');
+      } else if (err?.errors?.[0]?.code === 'form_code_expired') {
+        setError('Verification code has expired. Please request a new one.');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     }
   };
 
@@ -176,11 +200,11 @@ export default function SignUpScreen() {
               ))}
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.continueButton,
                 { opacity: code.length === 6 ? 1 : 0.5 }
-              ]} 
+              ]}
               onPress={onVerifyPress}
               disabled={code.length !== 6}
             >
@@ -207,41 +231,39 @@ export default function SignUpScreen() {
           <TouchableOpacity onPress={handleBackPress}>
             <IconSymbol name="chevron.left" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: '#000' , fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold'}]}>Get Started</Text>
-          <Text style={[styles.title, { color: '#000' , fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular'}]}>Enter distraction-free focus in the cat cafe</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold' }]}>Get Started</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular' }]}>Enter distraction-free focus in the cat cafe</Text>
         </View>
       </View>
 
       <View style={styles.bottomSection}>
-        <TextInput
-          style={styles.input}
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Email"
-          placeholderTextColor="#666"
-          onChangeText={(email) => setEmailAddress(email)}
-        />
+        <View style={styles.inputContainer}>
+          <TextInput
+            autoCapitalize="none"
+            value={emailAddress}
+            placeholder="Email"
+            onChangeText={(email) => setEmailAddress(email)}
+            style={styles.input}
+          />
+        </View>
 
         <View style={styles.passwordContainer}>
           <TextInput
-            style={[styles.input, styles.passwordInput]}
             value={password}
             placeholder="Password"
-            placeholderTextColor="#666"
             secureTextEntry={!showPassword}
             onChangeText={(pass) => setPassword(pass)}
+            style={[styles.input, styles.passwordInput]}
           />
-          <TouchableOpacity 
-            style={styles.passwordToggle}
+          <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
+            style={styles.passwordToggle}
           >
-            <IconSymbol 
-              name={showPassword ? "eye.slash" : "eye"} 
-              size={20} 
-              color="#666"
-            />
+            <IconSymbol name={showPassword ? 'eye.slash' : 'eye'} size={20} color="#666" />
           </TouchableOpacity>
         </View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <TouchableOpacity style={styles.continueButton} onPress={onSignUpPress}>
           <Text style={styles.continueButtonText}>Continue with Email</Text>
@@ -429,5 +451,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  errorText: {
+    color: 'red',
+    marginTop: 8,
+    textAlign: 'center',
+  },
 }); 
-
