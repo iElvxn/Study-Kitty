@@ -11,7 +11,7 @@ export default function Settings() {
     const { signOut } = useAuth();
     const { user } = useUser();
     const [settings, setSettings] = useState({
-        hardMode: false,
+        hardMode: true,
         chime: true,
         vibration: true,
     });

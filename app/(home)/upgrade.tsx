@@ -11,16 +11,28 @@ import { Upgrade } from "../models/upgrade";
 import { UserRecord } from "../models/user";
 
 export const getUpgrades = async (token: string) => {
-    const user: UserRecord = await getUser(token);
+    try {
+        const user: UserRecord = await getUser(token);
+        
+        // Check if user data is fully initialized
+        if (!user.currentCafe) {
+            console.log('User cafe not initialized yet, returning empty upgrades');
+            return [];
+        }
 
-    // Find the cafe by its string ID
-    const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
+        // Find the cafe by its string ID
+        const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
 
-    if (!currentCafe) {
-        throw new Error(`Cafe with id ${user.currentCafe} not found.`);
+        if (!currentCafe) {
+            console.warn(`Cafe with id ${user.currentCafe} not found.`);
+            return [];
+        }
+
+        return currentCafe.upgrades;
+    } catch (err) {
+        console.error('Error getting cafe upgrades:', err);
+        return [];
     }
-
-    return currentCafe.upgrades;
 };
 
 export const fetchUserUpgrades = async (token: string) => {
