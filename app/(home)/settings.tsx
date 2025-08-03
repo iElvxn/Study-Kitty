@@ -7,6 +7,23 @@ import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { apiRequest } from '../aws/client';
 
+export const getSettings = async () => {
+    try {
+      const settings = await AsyncStorage.getItem('appSettings');
+      if (settings) {
+        return JSON.parse(settings);
+      }
+      return {
+        hardMode: true,
+        chime: true,
+        vibration: true,
+      };
+    } catch (error) {
+      console.error('Error getting settings:', error);
+      return null;
+    }
+  };
+
 export default function Settings() {
     const { signOut } = useAuth();
     const { user } = useUser();

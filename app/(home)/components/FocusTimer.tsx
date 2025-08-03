@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AppState, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // @ts-ignore
 import BackgroundTimer from 'react-native-background-timer';
+import { getSettings } from '../settings';
 
 interface FocusTimerProps {
   onStateChange?: (isActive: boolean) => void;
@@ -23,10 +24,12 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
 
   // Handle app state changes for away detection and timer completion
   useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      const settings = await getSettings();
+      
       if (nextAppState === 'active') {
         // App came to foreground
-        if (awayStartTime && isActive) {
+        if (awayStartTime && isActive && settings.hardMode) {
           const timeAway = Date.now() - awayStartTime;
           const secondsAway = Math.floor(timeAway / 1000);
 

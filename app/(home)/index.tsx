@@ -14,6 +14,7 @@ import Cats from "./components/Cats";
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
 import Tags from './components/Tags';
+import { getSettings } from './settings';
 import { fetchUserUpgrades, getUpgrades } from "./upgrade";
 
 const { width, height } = Dimensions.get('window');
@@ -97,14 +98,17 @@ export default function HomeScreen() {
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
-      // Trigger haptic feedback
-      // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);      // Vibrate for 500ms 
-      // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      Vibration.vibrate([0, 500, 100, 500]); // Three strong 1-second vibrations
+      const settings = await getSettings();
+      console.log(settings);
+      if (settings.vibration) {
+        Vibration.vibrate([0, 500, 100, 500]); // Three strong 1-second vibrations
+      }
 
-      audioPlayer.seekTo(0);
-      audioPlayer.play();
+      if (settings.chime) {
+        audioPlayer.seekTo(0);
+        audioPlayer.play();
+      }
       // Update the cache
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
