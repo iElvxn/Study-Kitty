@@ -5,7 +5,7 @@ import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from '../aws/client';
 import { getCachedUserData, setCachedUserData } from '../aws/users';
@@ -20,6 +20,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const { getToken } = useAuth();
+  const { userId } = useAuth();
   const { isTimerActive, setIsTimerActive } = useTimer();
   const [sessionTime, setSessionTime] = useState(25 * 60);
   const [upgrades, setUpgrades] = useState<Upgrade[]>([]);
@@ -96,9 +97,14 @@ export default function HomeScreen() {
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
+      // Trigger haptic feedback
+      // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);      // Vibrate for 500ms 
+      // Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      Vibration.vibrate([0, 500, 100, 500]); // Three strong 1-second vibrations
+
       audioPlayer.seekTo(0);
       audioPlayer.play();
-      console.log("Audio played");
       // Update the cache
       const cachedUser = await getCachedUserData();
       if (cachedUser) {
@@ -113,7 +119,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/background2.jpg')}
+        source={require('@/assets/images/background.jpg')}
         style={styles.backgroundImage}
         contentFit="cover"
         cachePolicy="disk"
