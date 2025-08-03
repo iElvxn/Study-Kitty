@@ -5,7 +5,7 @@ import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -16,6 +16,7 @@ export default function SignInScreen() {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [isResettingPassword, setIsResettingPassword] = React.useState(false);
 
   WebBrowser.maybeCompleteAuthSession()
 
@@ -66,6 +67,33 @@ export default function SignInScreen() {
     } catch (err) {
     }
     router.push('/(auth)/sign_up');
+  };
+
+  const handleForgotPassword = async () => {
+    if (!emailAddress) {
+      setError('Please enter your email address to reset your password');
+      return;
+    }
+
+    if (!isLoaded) return;
+
+    try {
+      setIsResettingPassword(true);
+      await signIn.create({
+        strategy: "reset_password_email_code",
+        identifier: emailAddress,
+      });
+      
+      // Navigate to password reset screen
+      router.push({
+        pathname: '/(auth)/reset_password',
+        params: { email: emailAddress }
+      });
+    } catch (err: any) {
+      Alert.alert("Error", err?.errors?.[0]?.message || "An error occurred while sending the reset email.");
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   // Handle the submission of the sign-in form
@@ -126,6 +154,8 @@ export default function SignInScreen() {
             placeholder="Email"
             onChangeText={(email) => setEmailAddress(email)}
             style={styles.input}
+            keyboardType="email-address"
+            autoComplete="email"
           />
         </View>
 
@@ -136,6 +166,7 @@ export default function SignInScreen() {
             secureTextEntry={!showPassword}
             onChangeText={(pass) => setPassword(pass)}
             style={[styles.input, styles.passwordInput]}
+            autoComplete="password"
           />
           <TouchableOpacity
             style={styles.passwordToggle}
@@ -148,6 +179,16 @@ export default function SignInScreen() {
             />
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity 
+          onPress={handleForgotPassword}
+          disabled={isResettingPassword}
+          style={styles.forgotPasswordContainer}
+        >
+          <Text style={styles.forgotPasswordText}>
+            {isResettingPassword ? 'Sending reset email...' : 'Forgot Password?'}
+          </Text>
+        </TouchableOpacity>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -294,5 +335,14 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: 8,
     textAlign: 'center',
+  },
+  forgotPasswordContainer: {
+    alignSelf: 'flex-end',
+    marginBottom: 16,
+  },
+  forgotPasswordText: {
+    color: '#C7B6F5',
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
 });
