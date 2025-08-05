@@ -166,7 +166,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
 
                 const screenScaleX = windowWidth / BASE_WIDTH;
                 const screenScaleY = windowHeight / BASE_HEIGHT;
-                const scaledSpot = { x: Math.round(randomSpot.x * screenScaleX), y: Math.round(randomSpot.y * screenScaleY) };
+                const scaledSpot = { x: Math.ceil(randomSpot.x * screenScaleX), y: Math.ceil(randomSpot.y * screenScaleY) };
 
                 const cat: Cat = {
                     id: catData.id,
