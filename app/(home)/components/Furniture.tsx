@@ -9,27 +9,20 @@ interface FurnitureProps {
 
 const Furniture = ({ upgrades }: FurnitureProps) => {
     const furnitureItems = useMemo(() => {
-        return upgrades.map(upgrade => {
-            // Only show furniture for levels that have been purchased
-            const furnitureItems = [];
-            for (let level = 1; level <= upgrade.level; level++) {
-                const levelData = upgrade.levels[level];
-                if (!levelData || !levelData.image) continue;
-
-                // Only show this level's furniture if it's been purchased
-                if (level <= upgrade.level) {
-                    furnitureItems.push(
-                        <Image
-                            key={`${upgrade.id}-${level}`}
-                            source={levelData.image}
-                            style={styles.furniture}
-                            contentFit="contain"
-                            cachePolicy="disk"
-                        />
-                    );
-                }
-            }
-            return furnitureItems;
+        return upgrades.flatMap(upgrade => {
+            return Array.from({ length: upgrade.level }, (_, i) => i + 1)
+                .filter(level => upgrade.levels[level]?.image)
+                .map(level => (
+                    <Image
+                        key={`${upgrade.id}-${level}`}
+                        source={upgrade.levels[level].image}
+                        style={styles.furniture}
+                        contentFit="contain"
+                        cachePolicy="memory-disk"
+                        transition={200}
+                        recyclingKey={`${upgrade.id}-${level}`}
+                    />
+                ));
         });
     }, [upgrades]);
 
@@ -40,7 +33,10 @@ const Furniture = ({ upgrades }: FurnitureProps) => {
     );
 };
 
-export default memo(Furniture);
+export default memo(Furniture, (prevProps, nextProps) => {
+    // Only re-render if upgrades array reference changes
+    return prevProps.upgrades === nextProps.upgrades;
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -53,4 +49,4 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-}); 
+});

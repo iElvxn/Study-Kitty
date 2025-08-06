@@ -116,8 +116,6 @@ const UpgradeScreen = () => {
         Image.prefetch(require('@/assets/images/background.jpg'));
     }, []);
 
-    // No aggressive cleanup - let React Native handle memory naturally
-
     useEffect(() => {
         let isActive = true;
 

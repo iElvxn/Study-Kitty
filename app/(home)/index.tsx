@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from '../aws/client';
@@ -126,12 +126,19 @@ export default function HomeScreen() {
         source={require('@/assets/images/background.jpg')}
         style={styles.backgroundImage}
         contentFit="cover"
-        cachePolicy="disk"
+        cachePolicy="memory-disk"
+        recyclingKey="background-image"
       />
-      <Furniture upgrades={upgrades} />
+      <Suspense fallback={null}>
+        <Furniture upgrades={upgrades} />
+      </Suspense>
       {isTimerActive && <Cats sessionTime={sessionTime} />}
       <View style={styles.content}>
-        <FocusTimer onStateChange={setIsTimerActive} onSessionTimeChange={setSessionTime} onComplete={handleSessionComplete} />
+        <FocusTimer 
+          onStateChange={setIsTimerActive} 
+          onSessionTimeChange={setSessionTime} 
+          onComplete={handleSessionComplete} 
+        />
       </View>
       {!isTimerActive ?
         <View style={styles.homeButtons}>
