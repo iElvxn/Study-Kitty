@@ -1,7 +1,7 @@
 import { ThemedView } from '@/components/ThemedView';
-import { Ionicons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
-import React, { useRef, useState } from 'react';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -15,38 +15,14 @@ type CoinPackage = {
   popular?: boolean;
 };
 
-type CarouselItem = {
-  id: string;
-  image: any;
-  title: string;
-  description: string;
-};
-
 export default function BuyCoinsScreen() {
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
-  const carouselRef = useRef<FlatList>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
 
   const coinPackages: CoinPackage[] = [
     { id: 'small', amount: 100, price: '$0.99', bonus: 0 },
-    { id: 'medium', amount: 300, price: '$2.49', bonus: 30, popular: true },
-    { id: 'large', amount: 700, price: '$4.99', bonus: 100 },
-    { id: 'xlarge', amount: 1500, price: '$9.99', bonus: 300 },
-  ];
-
-  const carouselData: CarouselItem[] = [
-    {
-      id: '1',
-      image: require('@/assets/images/coin.png'),
-      title: 'Special Offer!',
-      description: 'Get 30% more coins with our best-selling package'
-    },
-    {
-      id: '2',
-      image: require('@/assets/images/coin.png'),
-      title: 'Limited Time',
-      description: 'Double coins on your first purchase!'
-    },
+    { id: 'medium', amount: 550, price: '$4.99', bonus: 50 },
+    { id: 'large', amount: 1200, price: '$9.99', bonus: 200},
+    { id: 'xlarge', amount: 2500, price: '$19.99', bonus: 500, popular: true },
   ];
 
   const handleBuy = (pkg: CoinPackage) => {
@@ -54,21 +30,6 @@ export default function BuyCoinsScreen() {
     console.log('Buying package:', pkg);
     setSelectedPackage(pkg.id);
   };
-
-  const renderCarouselItem = ({ item }: { item: CarouselItem }) => (
-    <View style={[styles.carouselItem, { width: width - 40 }]}>
-      <ExpoImage
-        source={item.image}
-        style={styles.carouselImage}
-        contentFit="cover"
-        cachePolicy="disk"
-      />
-      <View style={styles.carouselTextContainer}>
-        <Text style={styles.carouselTitle}>{item.title}</Text>
-        <Text style={styles.carouselDescription}>{item.description}</Text>
-      </View>
-    </View>
-  );
 
   const renderPackage = ({ item }: { item: CoinPackage }) => (
     <TouchableOpacity
@@ -86,11 +47,16 @@ export default function BuyCoinsScreen() {
         </View>
       )}
       <View style={styles.coinContainer}>
-        <Ionicons name="logo-bitcoin" size={24} color="#FFD700" />
-        <Text style={styles.coinAmount}>{item.amount}</Text>
-        {item.bonus ? (
-          <Text style={styles.bonusText}>+{item.bonus} bonus</Text>
-        ) : null}
+        <View style={styles.coinRow}>
+          <ExpoImage
+            source={require('@/assets/images/coin.png')}
+            style={styles.coinImage}
+            contentFit="cover"
+            cachePolicy="disk"
+          />
+          <Text style={styles.coinAmount}>{item.amount}</Text>
+        </View>
+        <Text style={styles.bonusText}>+{item.bonus} bonus</Text>
       </View>
       <Text style={styles.priceText}>{item.price}</Text>
       <TouchableOpacity style={styles.buyButton}>
@@ -108,11 +74,15 @@ export default function BuyCoinsScreen() {
         cachePolicy="memory-disk"
       />
       <View style={styles.darkOverlay} />
-      
+
       <View style={styles.content}>
-        <Text style={styles.title}>Buy Coins</Text>
-        <Text style={styles.subtitle}>Get coins to adopt new cats and decorate your cafe!</Text>
-        
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Buy Coins</Text>
+          <Text style={styles.subtitle}>
+            Get coins to adopt new cats and decorate your cafe!
+          </Text>
+        </View>
+
         {/* Coin Packages */}
         <Text style={styles.sectionTitle}>Available Packages</Text>
         <FlatList
@@ -124,6 +94,27 @@ export default function BuyCoinsScreen() {
           contentContainerStyle={styles.packageList}
           showsVerticalScrollIndicator={false}
         />
+
+        {/* Go Pro Button */}
+        <TouchableOpacity style={styles.goProButton} onPress={() => router.push('/pro')}>
+          <View style={styles.goProButtonContent}>
+            <ExpoImage
+              source={require('@/assets/images/Crown.png')}
+              style={styles.crownIcon}
+              contentFit="contain"
+              cachePolicy="disk"
+            />
+            <Text style={styles.goProButtonText}>GO PRO</Text>
+          </View>
+          <Text style={styles.goProButtonSubtext}>Unlock Premium Features</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={{ color: '#2D1810', fontFamily: 'Quicksand_700Bold', fontSize: 18 }}>← Go Back</Text>
+        </TouchableOpacity>
       </View>
     </ThemedView>
   );
@@ -134,91 +125,70 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundImage: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    opacity: 0.3,
+    ...StyleSheet.absoluteFillObject,
   },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   content: {
     flex: 1,
     padding: 20,
     paddingTop: 60,
   },
+  titleContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
   title: {
+    fontFamily: 'Quicksand_700Bold',
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-    fontFamily: 'DMSans-Bold',
+    color: '#FFF5E6',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
+    textAlign: 'center',
     fontSize: 16,
-    color: '#E0E0E0',
-    marginBottom: 24,
-    fontFamily: 'DMSans-Regular',
+    color: '#F9E4BC',
+    marginTop: 5,
+    fontFamily: 'Quicksand_500Medium',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   sectionTitle: {
+    width: '100%',
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: '600',
     color: '#fff',
     marginVertical: 16,
-    fontFamily: 'DMSans-SemiBold',
+    fontFamily: 'Quicksand_500Medium',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
-  carouselContainer: {
-    height: 160,
-    marginBottom: 20,
-  },
-  carouselItem: {
-    height: 140,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginRight: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  carouselImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  carouselTextContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  },
-  carouselTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    fontFamily: 'DMSans-Bold',
-  },
-  carouselDescription: {
-    color: '#E0E0E0',
-    fontSize: 14,
-    fontFamily: 'DMSans-Regular',
-  },
-  pagination: {
+  coinRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    marginHorizontal: 4,
+  coinImage: {
+    width: 30,
+    height: 30,
   },
-  paginationDotActive: {
-    backgroundColor: '#B6917E',
-    width: 20,
+  coinAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginLeft: 8,
+    fontFamily: 'Quicksand_700Bold',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
   packageList: {
     paddingBottom: 20,
@@ -247,48 +217,47 @@ const styles = StyleSheet.create({
   },
   popularBadge: {
     position: 'absolute',
-    top: 8,
-    right: -20,
-    backgroundColor: '#D4A373',
-    paddingVertical: 2,
-    paddingHorizontal: 24,
-    transform: [{ rotate: '45deg' }],
+    backgroundColor: '#B6917E',
+    top: 1,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    zIndex: 1,
+    borderWidth: 1,
+    borderColor: '#8B7355',
   },
   popularBadgeText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
     fontFamily: 'DMSans-Bold',
+    textAlign: 'center',
   },
   coinContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     marginBottom: 12,
   },
-  coinAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    marginLeft: 8,
-    fontFamily: 'DMSans-Bold',
-  },
   bonusText: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#75B67D',
-    marginLeft: 8,
-    fontFamily: 'DMSans-Medium',
+    fontFamily: 'Quicksand_700Bold',
   },
   priceText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 12,
-    fontFamily: 'DMSans-Bold',
+    fontFamily: 'Quicksand_700Bold',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   buyButton: {
     backgroundColor: '#B6917E',
     paddingVertical: 8,
     paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(221, 179, 145, 0.98)',
     borderRadius: 20,
     width: '100%',
     alignItems: 'center',
@@ -296,7 +265,55 @@ const styles = StyleSheet.create({
   buyButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 15,
+    fontFamily: 'Quicksand_700Bold',
+  },
+  goProButton: {
+    backgroundColor: 'rgb(158, 118, 160)',
+    borderRadius: 25,
+    padding: 12,
+    marginBottom: 30,
+    borderWidth: 4,
+    borderColor: 'rgba(93, 70, 95, 0.63)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  goProButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  crownIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+    marginLeft: -30,
+  },
+  goProButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
+    letterSpacing: 1,
+  },
+  goProButtonSubtext: {
+    color: '#fff',
     fontSize: 14,
-    fontFamily: 'DMSans-SemiBold',
+    textAlign: 'center',
+    marginTop: 4,
+    fontFamily: 'Quicksand_500Medium',
+  },
+  backButton: {
+    backgroundColor: '#F9E4BC',
+    padding: 10,
+    borderRadius: 18,
+    alignItems: 'center',
+    zIndex: 1000,
+    borderWidth: 5,
+    borderColor: '#caa867',
+    marginBottom: 25,
   },
 });
