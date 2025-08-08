@@ -35,7 +35,7 @@ export default function Pro() {
     const [offerings, setOfferings] = useState<any>(null);
 
     useEffect(() => {
-        //getOfferings()
+        getOfferings()
     }, [])
 
     const getOfferings = async () => {

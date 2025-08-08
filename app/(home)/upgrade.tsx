@@ -9,11 +9,12 @@ import { getUser, setCachedUserData } from "../aws/users";
 import { CAFES } from "../gameData/cafeData";
 import { Upgrade } from "../models/upgrade";
 import { UserRecord } from "../models/user";
+import BuyCoins from "./components/BuyCoins";
 
 export const getUpgrades = async (token: string) => {
     try {
         const user: UserRecord = await getUser(token);
-        
+
         // Check if user data is fully initialized
         if (!user.currentCafe) {
             console.log('User cafe not initialized yet, returning empty upgrades');
@@ -218,15 +219,16 @@ const UpgradeScreen = () => {
                     <Text style={styles.title}>Cafe Upgrades</Text>
                     {user && (
                         <View style={styles.coinsRow}>
+                            <Image
+                                source={require('@/assets/images/coin.png')}
+                                style={styles.coinIconImg}
+                                contentFit="contain"
+                                cachePolicy="memory-disk"
+                                priority="high"
+                                transition={100}
+                            />
                             <Text style={styles.coinsText}>{user.coins}</Text>
-                                            <Image
-                    source={require('@/assets/images/coin.png')}
-                    style={styles.coinIconImg}
-                    contentFit="contain"
-                    cachePolicy="memory-disk"
-                    priority="high"
-                    transition={100}
-                />
+                            <BuyCoins />
                         </View>
                     )}
                     <View style={{ minHeight: 22, justifyContent: 'center', alignItems: 'center' }}>

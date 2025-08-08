@@ -17,6 +17,7 @@ import { apiRequest } from '../aws/client';
 import { getUser, setCachedUserData } from '../aws/users';
 import { catDataToCat, CATS_BY_RARITY, getTierCost, RARITY_WEIGHTS } from '../gameData/catData';
 import { Cat } from '../models/cat';
+import BuyCoins from './components/BuyCoins';
 
 const { width, height } = Dimensions.get('window');
 
@@ -206,6 +207,7 @@ const AdoptScreen: React.FC = () => {
                 style={styles.coinIcon}
               />
               <Text style={styles.coinText}>{userData?.coins || 0}</Text>
+              <BuyCoins />
             </View>
           </View>
 
@@ -421,11 +423,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
+    gap: 8,
   },
   coinIcon: {
     width: 24,
     height: 24,
-    marginRight: 8,
   },
   coinText: {
     fontSize: 18,
