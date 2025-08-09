@@ -39,10 +39,22 @@ export const getUpgrades = async (token: string) => {
 export const fetchUserUpgrades = async (token: string) => {
     try {
         const userData = await getUser(token);
-        const upgradeData = userData.cafes[userData.currentCafe].upgrades
-        return upgradeData
+        
+        // Check if user data or cafes object is missing
+        if (!userData || !userData.cafes || !userData.currentCafe) {
+            return [];
+        }
+
+        // Check if currentCafe exists in cafes
+        const currentCafeData = userData.cafes[userData.currentCafe];
+        if (!currentCafeData || !currentCafeData.upgrades) {
+            return [];
+        }
+
+        return currentCafeData.upgrades;
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching user upgrades:', err);
+        return [];
     }
 }
 
