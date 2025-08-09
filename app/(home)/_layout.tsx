@@ -3,7 +3,8 @@ import { TimerProvider } from '@/context/TimerContext';
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import Purchases from 'react-native-purchases';
+import { Platform } from 'react-native';
+import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { initializeUser } from '../aws/users';
 
 export default function AuthRoutesLayout() {
@@ -32,25 +33,25 @@ export default function AuthRoutesLayout() {
   }, [isSignedIn]);
 
   //for pro
-  // useEffect(() => {
-  //   const initializePurchases = async () => {
-  //     try {
-  //       Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+  useEffect(() => {
+    const initializePurchases = async () => {
+      try {
+        Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-  //       if (Platform.OS === 'ios') {
-  //         Purchases.configure({
-  //           apiKey: "appl_MXGKbHagpEJVmmLaHEPltAQJcPz"
-  //         });
-  //       }
+        if (Platform.OS === 'ios') {
+          Purchases.configure({
+            apiKey: "appl_MXGKbHagpEJVmmLaHEPltAQJcPz"
+          });
+        }
         
-  //       await getCustomerInfo();
-  //     } catch (error) {
-  //       console.error('Error initializing purchases:', error);
-  //     }
-  //   };
+        await getCustomerInfo();
+      } catch (error) {
+        console.error('Error initializing purchases:', error);
+      }
+    };
 
-  //   initializePurchases();
-  // }, []);
+    initializePurchases();
+  }, []);
 
   const getCustomerInfo = async () => {
     try {

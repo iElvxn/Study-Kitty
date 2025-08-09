@@ -6,7 +6,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Alert, Dimensions, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
 type SubscriptionTier = {
@@ -17,6 +17,7 @@ type SubscriptionTier = {
     features: string[];
     popular: boolean;
     gradient: [string, string];
+    pkg: PurchasesPackage;
 };
 
 type CarouselItem = {
@@ -35,7 +36,7 @@ export default function Pro() {
     const [offerings, setOfferings] = useState<any>(null);
 
     useEffect(() => {
-        //getOfferings()
+        getOfferings()
     }, [])
 
     const getOfferings = async () => {
@@ -43,7 +44,7 @@ export default function Pro() {
             const offerings = await Purchases.getOfferings();
 
             if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
-                console.log("Offeringssss", JSON.stringify(offerings))
+                console.log("Offeringssss", JSON.stringify(offerings, null, 2))
                 setOfferings(offerings);
             }
         } catch (error) {
@@ -79,7 +80,7 @@ export default function Pro() {
         {
             id: 'monthly',
             name: 'Monthly',
-            price: '$4.99',
+            price: offerings?.current?.monthly?.product?.priceString || '$4.99',
             period: 'per month',
             features: [
                 '2x Coins',
@@ -88,32 +89,40 @@ export default function Pro() {
                 'Exclusive cat breeds',
             ],
             popular: false,
-            gradient: ['rgba(255, 245, 230, 0.15)', 'rgba(249, 228, 188, 0.15)']
+            gradient: ['rgba(255, 245, 230, 0.15)', 'rgba(249, 228, 188, 0.15)'],
+            pkg: offerings?.current?.availablePackages?.find((pkg: any) => pkg.packageType === 'MONTHLY')
         },
         {
             id: 'yearly',
             name: 'Yearly',
-            price: '$39.99',
+            price: offerings?.current?.annual?.product?.priceString || '$39.99',
             period: 'per year',
             features: [
                 'All Monthly features',
                 '2 months free',
+                'Save 33%',
+                'Best value',
             ],
             popular: true,
-            gradient: ['rgba(182, 145, 126, 0.2)', 'rgba(212, 163, 115, 0.2)']
+            gradient: ['rgba(255, 220, 150, 0.25)', 'rgba(255, 200, 100, 0.25)'],
+            pkg: offerings?.current?.availablePackages?.find((pkg: any) => pkg.packageType === 'ANNUAL')
         }
     ];
 
     const handleSubscribe = async (pkg: PurchasesPackage) => {
         try {
-            const customerInfo = await Purchases.getCustomerInfo();
+            const { customerInfo } = await Purchases.purchasePackage(pkg);
             if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
                 // Grant user "pro" access
-                console.log("Customer Info", JSON.stringify(customerInfo))
+                console.log("Customer Info", JSON.stringify(customerInfo));
+                Alert.alert("Success", "Thank you for subscribing to Study Kitty Pro!");
             }
-        } catch (e) {
-            // Error fetching purchaser info
-            console.log("error", e)
+        } catch (e: any) {
+            // Check if the purchase was cancelled by the user
+            if (!e.userCancelled) {
+                Alert.alert("Error", "An error occurred while processing your purchase. Please try again.");
+                console.error("Purchase error:", e);
+            }
         }
     }
 
@@ -236,7 +245,7 @@ export default function Pro() {
                                     styles.subscribeButton,
                                     tier.popular && styles.popularButton
                                 ]}
-                                onPress={() => handleSubscribe(tier.id)}
+                                onPress={() => handleSubscribe(tier.pkg)}
                             >
                                 <Text style={styles.subscribeButtonText}>
                                     {tier.popular ? 'Get Started' : 'Choose Plan'}
