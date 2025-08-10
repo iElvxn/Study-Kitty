@@ -99,8 +99,8 @@ export default function Pro() {
             period: 'per year',
             features: [
                 'All Monthly features',
-                '2 months free',
-                'Save 33%',
+                '6 months free',
+                'Save 50%',
                 'Best value',
             ],
             popular: true,
@@ -111,9 +111,8 @@ export default function Pro() {
 
     const handleSubscribe = async (pkg: PurchasesPackage) => {
         try {
-            const { customerInfo } = await Purchases.purchasePackage(pkg);
+            const customerInfo = await Purchases.getCustomerInfo();
             if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
-                // Grant user "pro" access
                 console.log("Customer Info", JSON.stringify(customerInfo));
                 Alert.alert("Success", "Thank you for subscribing to Study Kitty Pro!");
             }

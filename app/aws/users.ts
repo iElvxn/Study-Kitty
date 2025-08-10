@@ -46,7 +46,7 @@ export const getUser = async (token: string): Promise<UserRecord> => {
     }
 
     //if no cache or expired, get from DynamoDB
-    let res = await apiRequest<UserRecord>("/users", "GET", token);
+    const res = await apiRequest<UserRecord>("/users", "GET", token);
     // cache the fresh data
     await setCachedUserData(res.data);
     console.log("fetching user data")
@@ -78,11 +78,9 @@ export const initializeUser = async (token: string): Promise<UserRecord> => {
     }
 
     // If no cache, fetch from API
-    let res = await apiRequest<UserRecord>("/users", "GET", token);
-    
+    const res = await apiRequest<UserRecord>("/users", "GET", token);
     // Cache the data
-    await setCachedUserData(res.data);
+    await setCachedUserData(res.data); //maybe res.data.user
     
-    console.log(res.data);
     return res.data;
 };

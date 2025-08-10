@@ -15,17 +15,11 @@ export const getUpgrades = async (token: string) => {
     try {
         const user: UserRecord = await getUser(token);
 
-        // Check if user data is fully initialized
-        if (!user.currentCafe) {
-            console.log('User cafe not initialized yet, returning empty upgrades');
-            return [];
-        }
-
         // Find the cafe by its string ID
         const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
 
         if (!currentCafe) {
-            console.warn(`Cafe with id ${user.currentCafe} not found.`);
+            console.error(`Cafe with id ${user.currentCafe} not found.`);
             return [];
         }
 
@@ -39,7 +33,7 @@ export const getUpgrades = async (token: string) => {
 export const fetchUserUpgrades = async (token: string) => {
     try {
         const userData = await getUser(token);
-        
+
         // Check if user data or cafes object is missing
         if (!userData || !userData.cafes || !userData.currentCafe) {
             return [];
