@@ -46,6 +46,7 @@ export interface ProductivityData {
     weeklyStats: Record<string, WeeklyStats>;
     monthlyStats: Record<string, MonthlyStats>;
     allTimeStats: AllTimeStats;
+    timeStudiedToday: number;
 }
 
 export interface UserRecord {

@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Suspense, useCallback, useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import Purchases from 'react-native-purchases';
 import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from '../aws/client';
 import { getCachedUserData, setCachedUserData } from '../aws/users';
@@ -30,6 +31,8 @@ export default function HomeScreen() {
   const [showTagsModal, setShowTagsModal] = useState(false);
   const [earnedAmount, setEarnedAmount] = useState(0);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+
 
   const chimeSound = require('@/assets/chime.mp3');
   const audioPlayer = useAudioPlayer(chimeSound);
@@ -68,7 +71,19 @@ export default function HomeScreen() {
           console.error('Error fetching upgrade data:', error);
         }
       };
+      const checkProStatus = async () => {
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
+            setIsPro(true);
+          }
+        } catch (error) {
+          console.error("Error checking pro status:", error);
+          setIsPro(false);
+        }
+      };
 
+      checkProStatus();
       getUpgradeData();
 
       return () => {
@@ -88,7 +103,7 @@ export default function HomeScreen() {
         console.log("No token?");
         return;
       }
-      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag });
+      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag, isPro: isPro });
       const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
       const newBalance = data.newBalance;
       const newProductivity = data.newProductivity
@@ -134,10 +149,10 @@ export default function HomeScreen() {
       </Suspense>
       {isTimerActive && <Cats sessionTime={sessionTime} />}
       <View style={styles.content}>
-        <FocusTimer 
-          onStateChange={setIsTimerActive} 
-          onSessionTimeChange={setSessionTime} 
-          onComplete={handleSessionComplete} 
+        <FocusTimer
+          onStateChange={setIsTimerActive}
+          onSessionTimeChange={setSessionTime}
+          onComplete={handleSessionComplete}
         />
       </View>
       {!isTimerActive ?

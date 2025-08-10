@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -335,7 +336,35 @@ export default function Statistics() {
   const getStatCards = (): StatCard[] => {
     if (!productivity) return [];
 
-    const cards: StatCard[] = [
+    const baseCards: StatCard[] = [
+      {
+        title: 'Time Studied',
+        value: `${Math.floor(productivity.timeStudiedToday / 60)}h ${productivity.timeStudiedToday % 60}m`,
+        subtitle: 'Today',
+        color: '#4ECDC4'
+      },
+      {
+        title: 'Current Streak',
+        value: `${productivity.allTimeStats.currentStreak}`,
+        subtitle: 'days',
+        color: '#FF6B6B'
+      },
+      {
+        title: 'Total Sessions',
+        value: "🔒",
+        subtitle: 'Upgrade To Pro',
+        color: '#45B7D1'
+      },
+      {
+        title: 'Coins Earned',
+        value: "🔒",
+        subtitle: 'Upgrade To Pro',
+        color: '#FFEAA7'
+      }
+    ];
+    
+
+    const proCards: StatCard[] = [
       {
         title: 'Total Study Time',
         value: `${Math.floor(productivity.allTimeStats.totalMinutes / 60)}h ${productivity.allTimeStats.totalMinutes % 60}m`,
@@ -362,7 +391,7 @@ export default function Statistics() {
       }
     ];
 
-    return cards;
+    return isPro ? proCards : baseCards;
   };
 
   const chartData = getTimeSeriesData();
@@ -440,7 +469,7 @@ export default function Statistics() {
           {/* Time Series Chart */}
           <View style={styles.chartContainer}>
             <Text style={styles.sectionTitle}>Study Time Trend</Text>
-            {!isPro ? (
+            {isPro ? (
               <LineChart
                 data={chartData}
                 width={width - 40}
@@ -491,15 +520,22 @@ export default function Statistics() {
                   contentFit="cover"
                   cachePolicy="memory-disk"
                 />
-                <Text style={styles.upgradePrompt}>Upgrade to Pro to view your study time trend</Text>
+                <View style={styles.upgradePromptContainer}>
+                  <Text style={styles.upgradePrompt}>✨ Unlock Detailed Analytics</Text>
+                  <Text style={styles.upgradeSubtext}>Upgrade to Pro to track your study trends and patterns</Text>
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push('/pro')}
+                  >
+                    <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
-
-          {/* Tag Distribution */}
-          {tagDistribution.length > 0 && (
-            <View style={styles.chartContainer}>
-              <Text style={styles.sectionTitle}>Study Categories</Text>
+          <View style={styles.chartContainer}>
+            <Text style={styles.sectionTitle}>Study Categories</Text>
+            {isPro ? (
               <PieChart
                 data={tagDistribution}
                 width={width - 40}
@@ -513,10 +549,31 @@ export default function Statistics() {
                 absolute
                 style={styles.chart}
               />
-            </View>
-          )}
+            ) : (
+              <View style={styles.noChartContainer}>
+
+                <Image
+                  source={require('@/assets/images/blurred-pie-chart.webp')}
+                  style={styles.blurredLineChart}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+                <View style={styles.upgradePromptContainer}>
+                  <Text style={styles.upgradePrompt}>✨ Unlock Detailed Analytics</Text>
+                  <Text style={styles.upgradeSubtext}>Upgrade to Pro to see how you spend your study time</Text>
+                  <TouchableOpacity
+                    style={styles.upgradeButton}
+                    onPress={() => router.push('/pro')}
+                  >
+                    <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
 
           {/* Recent Sessions */}
+          {isPro && (
           <View style={styles.recentSessions}>
             <Text style={styles.sectionTitle}>Recent Sessions</Text>
             <FlatList
@@ -550,8 +607,9 @@ export default function Statistics() {
               scrollEnabled={false}
             />
           </View>
+          )}
         </ScrollView>
-      </LinearGradient>
+      </LinearGradient >
     </>
   );
 }
@@ -763,15 +821,58 @@ const styles = StyleSheet.create({
     height: '100%',
     opacity: 0.8,
   },
+  upgradePromptContainer: {
+    alignItems: 'center',
+  },
+  centeredUpgradeContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    zIndex: 4,
+    borderRadius: 12,
+  },
   upgradePrompt: {
-    marginTop: 16,
-    padding: 32,
-    textAlign: 'center',
-    fontSize: 22,
-    color: '#F9E4BC',
     fontFamily: 'Quicksand_700Bold',
-    textShadowColor: '#000000',
-    textShadowOffset: { width: 2, height: 2 },
+    fontSize: 20,
+    color: '#2D1810',
+    marginBottom: 8,
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  },
+  upgradeSubtext: {
+    fontFamily: 'Quicksand_700Bold',
+    fontSize: 16,
+    color: '#FFF5E6',
+    marginBottom: 16,
+    textAlign: 'center',
+    maxWidth: '80%',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
+  },
+  upgradeButton: {
+    backgroundColor: 'rgb(158, 118, 160)',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(93, 70, 95, 0.63)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  upgradeButtonText: {
+    fontFamily: 'Quicksand_700Bold',
+    color: '#FFF5E6',
+    fontSize: 16,
   },
 });
