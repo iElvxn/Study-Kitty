@@ -172,7 +172,7 @@ export default function Pro() {
         <ThemedView style={styles.container}>
             <ScrollView>
                 <ExpoImage
-                    source={require('@/assets/images/background.jpg')}
+                    source={require('@/assets/images/background.webp')}
                     style={styles.backgroundImage}
                     contentFit="cover"
                     cachePolicy="disk"

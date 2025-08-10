@@ -68,7 +68,7 @@ export default function BuyCoinsScreen() {
   return (
     <ThemedView style={styles.container}>
       <ExpoImage
-        source={require('@/assets/images/background.jpg')}
+        source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
         contentFit="cover"
         cachePolicy="memory-disk"

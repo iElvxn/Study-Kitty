@@ -14,6 +14,7 @@ import {
   View
 } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
+import Purchases from 'react-native-purchases';
 import { getUser } from '../aws/users';
 import { UserRecord } from '../models/user';
 
@@ -34,10 +35,25 @@ export default function Statistics() {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('week');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
 
   // Preload background image
   useEffect(() => {
     Image.prefetch(require('@/assets/images/background.jpg'));
+
+    const checkProStatus = async () => {
+      try {
+        const customerInfo = await Purchases.getCustomerInfo();
+        if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
+          setIsPro(true);
+        }
+      } catch (error) {
+        console.error("Error checking pro status:", error);
+        setIsPro(false);
+      }
+    };
+
+    checkProStatus();
   }, []);
 
   // Fetch user data when screen comes into focus
@@ -358,7 +374,7 @@ export default function Statistics() {
     return (
       <View style={styles.loadingContainer}>
         <Image
-          source={require('@/assets/images/background.jpg')}
+          source={require('@/assets/images/background.webp')}
           style={styles.backgroundImage}
           contentFit="cover"
           cachePolicy="memory-disk"
@@ -424,11 +440,12 @@ export default function Statistics() {
           {/* Time Series Chart */}
           <View style={styles.chartContainer}>
             <Text style={styles.sectionTitle}>Study Time Trend</Text>
-            <LineChart
-              data={chartData}
-              width={width - 40}
-              height={220}
-              fromZero={true}
+            {!isPro ? (
+              <LineChart
+                data={chartData}
+                width={width - 40}
+                height={220}
+                fromZero={true}
               formatYLabel={(y) => {
                 const yValue = parseFloat(y);
                 const hours = Math.floor(yValue / 60);
@@ -466,6 +483,9 @@ export default function Statistics() {
               bezier
               style={styles.chart}
             />
+            ) : (
+              <Text style={styles.sectionTitle}>Study Time Trend</Text>
+            )}
           </View>
 
           {/* Tag Distribution */}

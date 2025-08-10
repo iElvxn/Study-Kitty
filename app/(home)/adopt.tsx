@@ -184,7 +184,7 @@ const AdoptScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/background.jpg')}
+        source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
         cachePolicy="memory-disk"
         contentFit="cover"

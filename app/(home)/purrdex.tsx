@@ -39,16 +39,16 @@ export default function PurrdexScreen() {
   // Preload cat images
   useEffect(() => {
     let isMounted = true;
-    
+
     const preloadImages = async () => {
       try {
         if (allCats.length > 0) {
-          const imageUris = allCats.map(cat => 
-            typeof cat.animation === 'string' ? cat.animation : 
-            typeof cat.animation === 'object' && cat.animation?.uri ? cat.animation.uri : 
-            null
+          const imageUris = allCats.map(cat =>
+            typeof cat.animation === 'string' ? cat.animation :
+              typeof cat.animation === 'object' && cat.animation?.uri ? cat.animation.uri :
+                null
           ).filter(Boolean) as string[];
-          
+
           if (imageUris.length > 0) {
             await ExpoImage.prefetch(imageUris);
           }
@@ -63,7 +63,7 @@ export default function PurrdexScreen() {
     };
 
     preloadImages();
-    
+
     return () => {
       isMounted = false;
     };
@@ -191,7 +191,7 @@ export default function PurrdexScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ExpoImage
-          source={require('@/assets/images/background.jpg')}
+          source={require('@/assets/images/background.webp')}
           style={styles.backgroundImage}
           contentFit="cover"
           cachePolicy="memory-disk"
