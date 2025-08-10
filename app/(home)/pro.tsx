@@ -170,14 +170,14 @@ export default function Pro() {
 
     return (
         <ThemedView style={styles.container}>
+            <ExpoImage
+                source={require('@/assets/images/background.webp')}
+                style={styles.backgroundImage}
+                contentFit="cover"
+                cachePolicy="disk"
+            />
+            <View style={styles.darkOverlay} />
             <ScrollView>
-                <ExpoImage
-                    source={require('@/assets/images/background.webp')}
-                    style={styles.backgroundImage}
-                    contentFit="cover"
-                    cachePolicy="disk"
-                />
-                <View style={styles.darkOverlay} />
                 <View style={styles.header}>
                     <Text style={styles.title}>Study-Kitty Pro</Text>
                     <Text style={styles.subtitle}>Upgrade your study experience with premium features</Text>
@@ -265,7 +265,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     backgroundImage: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
     },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,

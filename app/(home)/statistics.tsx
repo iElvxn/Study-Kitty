@@ -389,7 +389,7 @@ export default function Statistics() {
   return (
     <>
       <Image
-        source={require('@/assets/images/background.jpg')}
+        source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
         cachePolicy="memory-disk"
         contentFit="cover"
@@ -446,45 +446,53 @@ export default function Statistics() {
                 width={width - 40}
                 height={220}
                 fromZero={true}
-              formatYLabel={(y) => {
-                const yValue = parseFloat(y);
-                const hours = Math.floor(yValue / 60);
-                const mins = Math.round(yValue % 60);
+                formatYLabel={(y) => {
+                  const yValue = parseFloat(y);
+                  const hours = Math.floor(yValue / 60);
+                  const mins = Math.round(yValue % 60);
 
-                if (hours > 0 && mins > 0) {
-                  return `${hours}h ${mins}m`;
-                } if (hours > 0) {
-                  return `${hours}h`;
-                }
-                return `${mins}m`;
-              }}
-              formatXLabel={(value) => {
-                if (selectedPeriod === 'day') {
-                  return value.split(':')[0];
-                }
-                return value;
-              }}
-              chartConfig={{
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                backgroundGradientFrom: 'rgba(255, 255, 255, 0.1)',
-                backgroundGradientTo: 'rgba(255, 255, 255, 0.1)',
-                decimalPlaces: 1,
-                color: (opacity = 1) => `rgba(78, 205, 196, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Changed to black
-                style: {
-                  borderRadius: 16
-                },
-                propsForDots: {
-                  r: '6',
-                  strokeWidth: '2',
-                  stroke: '#4ECDC4'
-                },
-              }}
-              bezier
-              style={styles.chart}
-            />
+                  if (hours > 0 && mins > 0) {
+                    return `${hours}h ${mins}m`;
+                  } if (hours > 0) {
+                    return `${hours}h`;
+                  }
+                  return `${mins}m`;
+                }}
+                formatXLabel={(value) => {
+                  if (selectedPeriod === 'day') {
+                    return value.split(':')[0];
+                  }
+                  return value;
+                }}
+                chartConfig={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundGradientFrom: 'rgba(255, 255, 255, 0.1)',
+                  backgroundGradientTo: 'rgba(255, 255, 255, 0.1)',
+                  decimalPlaces: 1,
+                  color: (opacity = 1) => `rgba(78, 205, 196, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, // Changed to black
+                  style: {
+                    borderRadius: 16
+                  },
+                  propsForDots: {
+                    r: '6',
+                    strokeWidth: '2',
+                    stroke: '#4ECDC4'
+                  },
+                }}
+                bezier
+                style={styles.chart}
+              />
             ) : (
-              <Text style={styles.sectionTitle}>Study Time Trend</Text>
+              <View style={styles.noChartContainer}>
+                <Image
+                  source={require('@/assets/images/blurred-line-chart.webp')}
+                  style={styles.blurredLineChart}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+                <Text style={styles.upgradePrompt}>Upgrade to Pro to view your study time trend</Text>
+              </View>
             )}
           </View>
 
@@ -738,5 +746,32 @@ const styles = StyleSheet.create({
   sessionTagText: {
     color: '#4ECDC4',
     fontSize: 10,
+  },
+  noChartContainer: {
+    height: 220,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(46, 44, 44, 0.2)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  blurredLineChart: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    opacity: 0.8,
+  },
+  upgradePrompt: {
+    marginTop: 16,
+    padding: 32,
+    textAlign: 'center',
+    fontSize: 22,
+    color: '#F9E4BC',
+    fontFamily: 'Quicksand_700Bold',
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 1,
   },
 });

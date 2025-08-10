@@ -205,7 +205,7 @@ export default function PurrdexScreen() {
   return (
     <View style={styles.container}>
       <ExpoImage
-        source={require('@/assets/images/background.jpg')}
+        source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
         contentFit="cover"
         cachePolicy="disk"
