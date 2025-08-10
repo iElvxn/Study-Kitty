@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -38,7 +38,6 @@ export default function Statistics() {
   const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
 
-  // Preload background image
   useEffect(() => {
     Image.prefetch(require('@/assets/images/background.jpg'));
 
@@ -362,7 +361,7 @@ export default function Statistics() {
         color: '#FFEAA7'
       }
     ];
-    
+
 
     const proCards: StatCard[] = [
       {
@@ -394,6 +393,13 @@ export default function Statistics() {
     return isPro ? proCards : baseCards;
   };
 
+  const sortedRecentSessions = useMemo(() => {
+    if (!productivity?.recentSessions) return [];
+    return [...productivity.recentSessions]
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+      .slice(0, 10);
+  }, [productivity?.recentSessions]);
+
   const chartData = getTimeSeriesData();
   const tagDistribution = getTagDistribution();
   const statCards = getStatCards();
@@ -414,6 +420,10 @@ export default function Statistics() {
       </View>
     );
   }
+
+
+
+
 
   return (
     <>
@@ -574,39 +584,39 @@ export default function Statistics() {
 
           {/* Recent Sessions */}
           {isPro && (
-          <View style={styles.recentSessions}>
-            <Text style={styles.sectionTitle}>Recent Sessions</Text>
-            <FlatList
-              data={productivity?.recentSessions.slice(0, 10) || []}
-              keyExtractor={(item) => item.sessionId}
-              renderItem={({ item }) => (
-                <View style={styles.sessionItem}>
-                  <View style={styles.sessionInfo}>
-                    <Text style={styles.sessionDate}>
-                      {new Date(item.startTime).toLocaleDateString()}
-                    </Text>
-                    <Text style={styles.sessionTime}>
-                      {new Date(item.startTime).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </Text>
+            <View style={styles.recentSessions}>
+              <Text style={styles.sectionTitle}>Recent Sessions</Text>
+              <FlatList
+                data={sortedRecentSessions}
+                keyExtractor={(item) => item.sessionId}
+                renderItem={({ item }) => (
+                  <View style={styles.sessionItem}>
+                    <View style={styles.sessionInfo}>
+                      <Text style={styles.sessionDate}>
+                        {new Date(item.startTime).toLocaleDateString()}
+                      </Text>
+                      <Text style={styles.sessionTime}>
+                        {new Date(item.startTime).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </Text>
+                    </View>
+                    <View style={styles.sessionDetails}>
+                      <Text style={styles.sessionDuration}>
+                        {Math.floor(item.sessionDuration / 60)}m {item.sessionDuration % 60}s
+                      </Text>
+                      {item.tag && (
+                        <View style={styles.sessionTag}>
+                          <Text style={styles.sessionTagText}>{item.tag}</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
-                  <View style={styles.sessionDetails}>
-                    <Text style={styles.sessionDuration}>
-                      {Math.floor(item.sessionDuration / 60)}m {item.sessionDuration % 60}s
-                    </Text>
-                    {item.tag && (
-                      <View style={styles.sessionTag}>
-                        <Text style={styles.sessionTagText}>{item.tag}</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )}
-              scrollEnabled={false}
-            />
-          </View>
+                )}
+                scrollEnabled={false}
+              />
+            </View>
           )}
         </ScrollView>
       </LinearGradient >
