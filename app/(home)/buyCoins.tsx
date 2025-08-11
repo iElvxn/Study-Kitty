@@ -1,8 +1,12 @@
 import { ThemedView } from '@/components/ThemedView';
+import { useAuth } from "@clerk/clerk-expo";
 import { Image as ExpoImage } from 'expo-image';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Purchases, { PurchasesPackage } from 'react-native-purchases';
+import { apiRequest } from '../aws/client';
+import { getCachedUserData, setCachedUserData } from '../aws/users';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 60) / 2; // 2 columns with margins
@@ -13,32 +17,104 @@ type CoinPackage = {
   price: string;
   bonus?: number;
   popular?: boolean;
+  pkg: PurchasesPackage;
 };
 
 export default function BuyCoinsScreen() {
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [coinPackages, setCoinPackages] = useState<CoinPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { getToken } = useAuth();
 
-  const coinPackages: CoinPackage[] = [
-    { id: 'small', amount: 100, price: '$0.99', bonus: 0 },
-    { id: 'medium', amount: 550, price: '$4.99', bonus: 50 },
-    { id: 'large', amount: 1200, price: '$9.99', bonus: 200},
-    { id: 'xlarge', amount: 2500, price: '$19.99', bonus: 500, popular: true },
-  ];
 
-  const handleBuy = (pkg: CoinPackage) => {
-    // TODO: Implement purchase logic
-    console.log('Buying package:', pkg);
-    setSelectedPackage(pkg.id);
+  useEffect(() => {
+    getOfferings();
+  }, []);
+
+  const getOfferings = async () => {
+    try {
+      const offerings = await Purchases.getOfferings();
+
+      if (offerings.current) {
+        const coinProducts = offerings.current.availablePackages
+          .filter(pkg => pkg.product.productType === 'CONSUMABLE')
+          .map(pkg => {
+            // Extract the coin amount from the product identifier
+            const amount = parseInt(pkg.product.identifier);
+            return {
+              id: pkg.identifier,
+              amount: amount,
+              price: pkg.product.priceString,
+              bonus: calculateBonus(amount),
+              popular: amount === 2500, // Mark 2500 coins as popular
+              pkg: pkg
+            };
+          })
+          .sort((a, b) => a.amount - b.amount); // Sort by coin amount
+
+        setCoinPackages(coinProducts);
+      }
+    } catch (error) {
+      console.error("Error fetching offerings:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const calculateBonus = (amount: number): number => {
+    // Calculate bonus based on the package size
+    if (amount >= 2500) return 500;
+    if (amount >= 1200) return 200;
+    if (amount >= 550) return 50;
+    return 0;
+  };
+
+  const handleBuy = async (pkg: PurchasesPackage) => {
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
+
+      const productId = pkg.product.identifier;
+      console.log("User bought:", productId);
+
+      const token = await getToken();
+      if (!token) return;
+      const res = await apiRequest("/coin", "POST", token, { productId: productId });
+      const newBalance = (res.data as any).newBalance;
+      const cachedUser = await getCachedUserData();
+      if (cachedUser) {
+        const updatedUser = { ...cachedUser, coins: newBalance };
+        await setCachedUserData(updatedUser);
+      }
+    } catch (error) {
+      if (!(error instanceof Purchases.PurchasesError) || !error.userCancelled) {
+        console.error("Purchase error:", error);
+        Alert.alert("Error", "Failed to complete purchase. Please try again.");
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" />
+      </ThemedView>
+    );
+  }
+
+  if (coinPackages.length === 0) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <Text>No coin packages available</Text>
+      </ThemedView>
+    );
+  }
 
   const renderPackage = ({ item }: { item: CoinPackage }) => (
     <TouchableOpacity
       style={[
         styles.packageCard,
-        selectedPackage === item.id && styles.selectedPackage,
         item.popular && styles.popularPackage
       ]}
-      onPress={() => handleBuy(item)}
+      onPress={() => handleBuy(item.pkg)}
       activeOpacity={0.8}
     >
       {item.popular && (
@@ -59,7 +135,10 @@ export default function BuyCoinsScreen() {
         <Text style={styles.bonusText}>+{item.bonus} bonus</Text>
       </View>
       <Text style={styles.priceText}>{item.price}</Text>
-      <TouchableOpacity style={styles.buyButton}>
+      <TouchableOpacity
+        style={styles.buyButton}
+        onPress={() => handleBuy(item.pkg)}
+      >
         <Text style={styles.buyButtonText}>Buy Now</Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -208,10 +287,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  selectedPackage: {
-    borderColor: '#B6917E',
-    backgroundColor: 'rgba(182, 145, 126, 0.2)',
-  },
   popularPackage: {
     borderColor: '#D4A373',
   },
@@ -316,4 +391,8 @@ const styles = StyleSheet.create({
     borderColor: '#caa867',
     marginBottom: 25,
   },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

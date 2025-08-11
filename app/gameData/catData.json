@@ -1,23 +1,29 @@
 {
   "catsByRarity": {
+    "default": {
+      "common": [
+        "white",
+        "orange-tabby"
+      ]
+    },
     "common": {
       "common": [
-        "white"
+        "gray-tabby"
       ],
       "uncommon": [
-        "orange-tabby"
-      ],
-      "rare": [
         "tuxedo"
       ],
-      "legendary": [
+      "rare": [
         "persian"
+      ],
+      "legendary": [
+        "cherry-blossom-calico"
       ],
       "cost": 15
     },
     "gold": {
       "common": [
-        "gray-tabby"
+        "black"
       ],
       "uncommon": [
         "calico"
@@ -41,7 +47,7 @@
         "mainecoon"
       ],
       "legendary": [
-        "cherry-blossom-calico"
+        "king"
       ],
       "cost": 75
     },

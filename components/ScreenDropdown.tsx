@@ -12,8 +12,8 @@ const SCREENS = [
   { name: 'Adopt Cats', route: '/adopt' as const, icon: 'paperplane.fill' as const },
   { name: 'Purrdex', route: '/purrdex' as const, icon: 'person.fill' as const },
   { name: 'Statistics', route: '/statistics' as const, icon: 'chart.bar.fill' as const },
-  { name: 'Pro', route: '/pro' as const, icon: 'person.fill' as const },
   { name: 'Settings', route: '/settings' as const, icon: 'gear' as const },
+  { name: 'Pro', route: '/pro' as const, icon: 'crown.fill' as const },
 ] as const;
 
 export function ScreenDropdown() {
@@ -96,6 +96,7 @@ const styles = StyleSheet.create({
   optionText: {
     color: '#fff',
     fontSize: 16,
+    fontFamily: 'Quicksand_500Medium',
   },
   divider: {
     height: 1,

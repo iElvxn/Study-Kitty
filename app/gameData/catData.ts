@@ -9,7 +9,7 @@ export interface CatData {
 }
 
 export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
-    common: {
+    default: {
         common: [
             {
                 id: 'white',
@@ -17,37 +17,17 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
                 rarity: 'common',
                 animation: require('../../assets/images/cats/White.gif'),
                 reverse: require('../../assets/images/cats/WhiteReverse.gif')
-            }
-        ],
-        uncommon: [
+            },
             {
                 id: 'orange-tabby',
                 name: 'Orange Tabby',
-                rarity: 'uncommon',
+                rarity: 'common',
                 animation: require('../../assets/images/cats/Orange Tabby.gif'),
                 reverse: require('../../assets/images/cats/Orange TabbyReverse.gif')
             }
-        ],
-        rare: [
-            {
-                id: 'tuxedo',
-                name: 'Tuxedo',
-                rarity: 'rare',
-                animation: require('../../assets/images/cats/Tuxedo.gif'),
-                reverse: require('../../assets/images/cats/TuxedoReverse.gif')
-            }
-        ],
-        legendary: [
-            {
-                id: 'persian',
-                name: 'Persian',
-                rarity: 'legendary',
-                animation: require('../../assets/images/cats/Persian.gif'),
-                reverse: require('../../assets/images/cats/PersianReverse.gif')
-            },
         ]
     },
-    gold: {
+    common: {
         common: [
             {
                 id: 'gray-tabby',
@@ -55,6 +35,44 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
                 rarity: 'common',
                 animation: require('../../assets/images/cats/Gray Tabby.gif'),
                 reverse: require('../../assets/images/cats/Gray TabbyReverse.gif')
+            },
+        ],
+        uncommon: [
+            {
+                id: 'tuxedo',
+                name: 'Tuxedo',
+                rarity: 'uncommon',
+                animation: require('../../assets/images/cats/Tuxedo.gif'),
+                reverse: require('../../assets/images/cats/TuxedoReverse.gif')
+            }
+        ],
+        rare: [
+            {
+                id: 'persian',
+                name: 'Persian',
+                rarity: 'rare',
+                animation: require('../../assets/images/cats/Persian.gif'),
+                reverse: require('../../assets/images/cats/PersianReverse.gif')
+            }
+        ],
+        legendary: [
+            {
+                id: 'cherry-blossom-calico',
+                name: 'Cherry Blossom Calico',
+                rarity: 'legendary',
+                animation: require('../../assets/images/cats/Cherry Blossom Calico.gif'),
+                reverse: require('../../assets/images/cats/Cherry Blossom CalicoReverse.gif')
+            },
+        ]
+    },
+    gold: {
+        common: [
+            {
+                id: 'black',
+                name: 'Black',
+                rarity: 'common',
+                animation: require('../../assets/images/cats/Black.gif'),
+                reverse: require('../../assets/images/cats/BlackReverse.gif')
             },
         ],
         uncommon: [
@@ -118,12 +136,12 @@ export const CATS_BY_RARITY: Record<string, Record<string, CatData[]>> = {
         ],
         legendary: [
             {
-                id: 'cherry-blossom-calico',
-                name: 'Cherry Blossom Calico',
+                id: 'king',
+                name: 'King',
                 rarity: 'legendary',
-                animation: require('../../assets/images/cats/Cherry Blossom Calico.gif'),
-                reverse: require('../../assets/images/cats/Cherry Blossom CalicoReverse.gif')
-            },
+                animation: require('../../assets/images/cats/King.gif'),
+                reverse: require('../../assets/images/cats/KingReverse.gif')
+            }
         ]
     }
 };

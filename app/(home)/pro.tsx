@@ -49,7 +49,6 @@ export default function Pro() {
             }
         } catch (error) {
             console.error("Error fetching offerings:", error);
-            // Don't crash the app, just log the error
         }
     }
 
@@ -111,9 +110,8 @@ export default function Pro() {
 
     const handleSubscribe = async (pkg: PurchasesPackage) => {
         try {
-            const customerInfo = await Purchases.getCustomerInfo();
+            const {customerInfo} = await Purchases.purchasePackage(pkg);
             if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
-                console.log("Customer Info", JSON.stringify(customerInfo));
                 Alert.alert("Success", "Thank you for subscribing to Study Kitty Pro!");
             }
         } catch (e: any) {
