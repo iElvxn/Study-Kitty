@@ -6,7 +6,7 @@ import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Alert, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Purchases, { PurchasesPackage } from 'react-native-purchases';
 
 type SubscriptionTier = {
@@ -251,12 +251,30 @@ export default function Pro() {
                         </View>
                     ))}
                 </View>
+
+                {/* EULA and Privacy Policy Links */}
+                <View style={styles.legalContainer}>
+                    <Text style={styles.legalText}>
+                        By subscribing, you agree to our{' '}
+                        <Text 
+                            style={styles.legalLink}
+                            onPress={() => router.push('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}
+                        >
+                            Terms of Service
+                        </Text>{' '}
+                        and{' '}
+                        <Text 
+                            style={styles.legalLink}
+                            onPress={() => router.push('https://ielvxn.github.io/Study-Kitty-Privacy-Policy/')}
+                        >
+                            Privacy Policy
+                        </Text>
+                    </Text>
+                </View>
             </ScrollView>
         </ThemedView>
     );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     container: {
@@ -446,5 +464,21 @@ const styles = StyleSheet.create({
         fontFamily: 'Quicksand_700Bold',
         color: Colors.text,
         marginBottom: 20,
+    },
+    legalContainer: {
+        padding: 20,
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 30,
+    },
+    legalText: {
+        color: Colors.text,
+        fontSize: 13,
+        textAlign: 'center',
+        opacity: 0.7,
+    },
+    legalLink: {
+        color: Colors.primary,
+        textDecorationLine: 'underline',
     },
 });

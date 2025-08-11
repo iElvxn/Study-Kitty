@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import Purchases from 'react-native-purchases';
 import { apiRequest } from '../aws/client';
 
 export const getSettings = async () => {
@@ -190,6 +191,23 @@ export default function Settings() {
                     />
                 </View>
 
+                <View style={styles.section}>
+                    <TouchableOpacity
+                        style={styles.restoreButton}
+                        onPress={async () => {
+                            try {
+                                await Purchases.restorePurchases();
+                                Alert.alert("Success", "Your purchases have been restored!");
+                            } catch (error) {
+                                console.error("Error restoring purchases:", error);
+                                Alert.alert("Error", "Failed to restore purchases. Please try again.");
+                            }
+                        }}
+                    >
+                        <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+                    </TouchableOpacity>
+                </View>
+
                 <View style={styles.dangerZone}>
                     <Text style={styles.dangerZoneTitle}>Danger Zone</Text>
                     <TouchableOpacity
@@ -276,7 +294,6 @@ const styles = StyleSheet.create({
     },
     dangerZone: {
         width: '90%',
-        marginTop: 20,
         backgroundColor: 'rgba(139, 0, 0, 0.2)',
         borderRadius: 12,
         padding: 16,
@@ -284,23 +301,40 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 0, 0, 0.3)',
     },
     dangerZoneTitle: {
-        fontFamily: 'Quicksand_600SemiBold',
+        fontFamily: 'Quicksand_700Bold',
         fontSize: 18,
         color: '#FF6B6B',
         marginBottom: 12,
         textAlign: 'center',
     },
     deleteButton: {
-        backgroundColor: 'rgba(255, 0, 0, 0.2)',
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 0, 0, 0.3)',
+        backgroundColor: 'rgba(255, 59, 48, 0.2)',
+        padding: 15,
+        borderRadius: 10,
+        width: '100%',
         alignItems: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 59, 48, 0.5)',
+    },
+    restoreButton: {
+        backgroundColor: 'rgba(10, 132, 255, 0.2)',
+        padding: 15,
+        borderRadius: 10,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(10, 132, 255, 0.5)',
     },
     deleteButtonText: {
-        color: '#FF6B6B',
-        fontFamily: 'Quicksand_600SemiBold',
+        color: '#FF3B30',
+        fontFamily: 'Quicksand_500Medium',
+        fontSize: 16,
+    },
+    restoreButtonText: {
+        color: '#0A84FF',
+        fontFamily: 'Quicksand_500Medium',
         fontSize: 16,
     },
 });
