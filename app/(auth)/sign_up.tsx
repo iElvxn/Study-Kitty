@@ -1,5 +1,4 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors } from '@/constants/Colors';
 import { useAuth, useSignUp, useSSO } from '@clerk/clerk-expo';
 import * as AuthSession from 'expo-auth-session';
 import { useRouter } from 'expo-router';
@@ -242,6 +241,7 @@ export default function SignUpScreen() {
             autoCapitalize="none"
             value={emailAddress}
             placeholder="Email"
+            placeholderTextColor="#666"
             onChangeText={(email) => setEmailAddress(email)}
             style={styles.input}
           />
@@ -251,6 +251,7 @@ export default function SignUpScreen() {
           <TextInput
             value={password}
             placeholder="Password"
+            placeholderTextColor="#666"
             secureTextEntry={!showPassword}
             onChangeText={(pass) => setPassword(pass)}
             style={[styles.input, styles.passwordInput]}
@@ -276,12 +277,12 @@ export default function SignUpScreen() {
         </View>
 
         <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('apple')}>
-          <IconSymbol name="apple.logo" size={20} color={Colors.text} />
+          <IconSymbol name="apple.logo" size={20} color={'#FFF'} />
           <Text style={styles.socialButtonText}>Continue with Apple</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.socialButton} onPress={() => handleSignInWithSSO('google')}>
-          <IconSymbol name="g.circle" size={20} color={Colors.text} />
+          <IconSymbol name="g.circle" size={20} color={'#FFF'} />
           <Text style={styles.socialButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   socialButtonText: {
-    color: Colors.text,
+    color: '#FFF',
     fontSize: 16,
     marginLeft: 12,
   },
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
     borderColor: '#333',
     borderRadius: 8,
     padding: 16,
-    color: Colors.text,
+    color: '#FFF',
     fontSize: 16,
     marginBottom: 12,
   },
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
     borderColor: '#333',
     fontSize: 24,
     textAlign: 'center',
-    color: Colors.text,
+    color: '#FFF',
     backgroundColor: 'transparent',
   },
   buttonIcon: {

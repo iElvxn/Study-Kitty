@@ -15,11 +15,14 @@ export const getUpgrades = async (token: string) => {
     try {
         const user: UserRecord = await getUser(token);
 
+        // Ensure currentCafe is a string for comparison
+        const currentCafeId = String(user.currentCafe);
+        
         // Find the cafe by its string ID
-        const currentCafe = CAFES.find(cafe => cafe.id === user.currentCafe);
+        const currentCafe = CAFES.find(cafe => String(cafe.id) === currentCafeId);
 
         if (!currentCafe) {
-            console.error(`Cafe with id ${user.currentCafe} not found.`);
+            console.error(`Cafe with id ${currentCafeId} not found.`);
             return [];
         }
 

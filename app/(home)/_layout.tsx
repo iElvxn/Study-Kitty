@@ -7,6 +7,13 @@ import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { initializeUser } from '../aws/users';
+import { StyleSheet, ViewStyle } from 'react-native';
+
+const contentStyle: ViewStyle = {
+  flex: 1,
+  backgroundColor: 'transparent',
+};
+
 
 export default function AuthRoutesLayout() {
   const { isSignedIn, getToken } = useAuth();
@@ -72,7 +79,7 @@ export default function AuthRoutesLayout() {
 
 
   if (!isSignedIn) {
-    return <Redirect href="/(auth)/index" />;
+    return <Redirect href="/(auth)" />;
   }
 
   return (
@@ -82,8 +89,41 @@ export default function AuthRoutesLayout() {
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
+          // Optimize memory usage for native stack
+          animationTypeForReplace: 'push',
+          contentStyle: contentStyle,
         }}
-      />
+        screenListeners={{
+          // Clear image cache when screen changes
+          state: () => ({
+            transitionEnd: () => {
+              if (Platform.OS !== 'web') {
+                // Clear memory cache after a short delay to ensure smooth transitions
+                setTimeout(() => {
+                  Image.clearMemoryCache();
+                }, 300);
+              }
+            },
+          }),
+        }}
+      >
+        <Stack.Screen 
+          name="index" 
+          options={{
+            // Optimize home screen
+            animation: 'fade',
+          }} 
+        />
+        <Stack.Screen 
+          name="upgrade" 
+          options={{
+            // Optimize upgrade screen
+            animation: 'slide_from_right',
+            // Clear cache when leaving this screen
+            contentStyle: [contentStyle, { backgroundColor: '#1E1E1E' }],
+          }} 
+        />
+      </Stack>
     </TimerProvider>
   );
 }
