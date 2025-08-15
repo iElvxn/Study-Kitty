@@ -29,7 +29,7 @@ export default function HomeScreen() {
   const { refreshTrigger } = useUpgrade();
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [showTagsModal, setShowTagsModal] = useState(false);
-  const [earnedAmount, setEarnedAmount] = useState(0);
+  const [earnedAmount, setEarnedAmount] = useState("Loading...");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isPro, setIsPro] = useState(false);
 
@@ -103,19 +103,11 @@ export default function HomeScreen() {
         console.log("No token?");
         return;
       }
-      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag, isPro: isPro });
-      const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
-      const newBalance = data.newBalance;
-      const newProductivity = data.newProductivity
-
-      setEarnedAmount(data.coinsAwarded);
-      // Pick a random quote for the modal
       const randomIdx: number = Math.floor(Math.random() * completionQuotes.length);
       setModalQuote(completionQuotes[randomIdx]);
       setShowRewardModal(true);
 
       const settings = await getSettings();
-      console.log(settings);
       if (settings.vibration) {
         Vibration.vibrate([0, 500, 100, 500]); // Three strong 1-second vibrations
       }
@@ -124,6 +116,14 @@ export default function HomeScreen() {
         audioPlayer.seekTo(0);
         audioPlayer.play();
       }
+
+      const res = await apiRequest("/session", "POST", token, { sessionDuration: sessionTime, tag: selectedTag, isPro: isPro });
+      const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
+      const newBalance = data.newBalance;
+      const newProductivity = data.newProductivity
+
+      setEarnedAmount(String(data.coinsAwarded));
+      
       // Update the cache
       const cachedUser = await getCachedUserData();
       if (cachedUser) {

@@ -1,20 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
-import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import React, { useEffect, useState } from 'react';
-import { AppState, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// @ts-ignore
+import BackgroundTimer from 'react-native-background-timer';
 import { getSettings } from '../settings';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 interface FocusTimerProps {
   onStateChange?: (isActive: boolean) => void;
@@ -32,41 +21,12 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
   const [initialTime, setInitialTime] = useState(DEFAULT_TIMER_TIME);
   const [awayStartTime, setAwayStartTime] = useState<number | null>(null);
   const [wasAwayTooLong, setWasAwayTooLong] = useState(false);
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
-
-    if (Platform.OS === 'android') {
-      Notifications.getNotificationChannelsAsync().then(value => setChannels(value ?? []));
-    }
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
-    });
-
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log(response);
-    });
-
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-  }, []);
 
   // Handle app state changes for away detection and timer completion
   useEffect(() => {
-    const loadTimer = async () => {
-      await renderOldTimer();
-    };
-
     const handleAppStateChange = async (nextAppState: string) => {
       const settings = await getSettings();
-
+      
       if (nextAppState === 'active') {
         // App came to foreground
         if (awayStartTime && isActive && settings.hardMode) {
@@ -77,16 +37,15 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
             setWasAwayTooLong(true);
 
             // Stop the timer immediately
-            stopTimer();
+            BackgroundTimer.stop();
+            setIsActive(false);
+            setTime(initialTime);
           }
         }
         setAwayStartTime(null);
 
-        //when user comes back to app, set the timer to calculated time left
-        renderOldTimer();
-
         // Handle timer completion when returning from background
-        if (isActive && time <= 0) {
+        if (isActive && time === 0) {
           if (!wasAwayTooLong) {
             onComplete?.();
           }
@@ -101,21 +60,24 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
         }
       }
     };
-    loadTimer();
+
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription?.remove();
   }, [isActive, awayStartTime, initialTime, time, onComplete, wasAwayTooLong]);
 
   // Handle timer countdown
   useEffect(() => {
-    let interval: number | null = null;
+    let interval: number;
 
     //count down the seconds using background timer
     if (isActive && time > 0) {
-      interval = setInterval(() => setTime(prev => prev - 1), 1000);
+      BackgroundTimer.start();
+      interval = BackgroundTimer.setInterval(() => {
+        setTime((prevTime) => prevTime - 1);
+      }, 1000);
     } else if (isActive && time === 0) {
       // Timer completed!
-      if (interval) clearInterval(interval);
+      BackgroundTimer.stop();
 
       // Only call onComplete if user wasn't away too long
       if (!wasAwayTooLong) {
@@ -125,8 +87,8 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
       setIsActive(false);
       setTime(initialTime);
       setWasAwayTooLong(false); // Reset for next session
-    } else if (interval) {
-      clearInterval(interval);
+    } else {
+      BackgroundTimer.stop();
       setIsActive(false);
       setTime(initialTime);
     }
@@ -136,7 +98,8 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
 
     return () => {
       if (interval) {
-        clearInterval(interval);
+        BackgroundTimer.clearInterval(interval);
+        BackgroundTimer.stop();
       }
     };
   }, [isActive, time, initialTime, onStateChange, onComplete, wasAwayTooLong]);
@@ -146,28 +109,8 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     onSessionTimeChange?.(initialTime);
   }, [initialTime, onSessionTimeChange]);
 
-  const startTimer = async () => {
-    setIsActive(true);
-    const startTime = Date.now();
-    await AsyncStorage.setItem('activeTimer', JSON.stringify({ startTime, duration: initialTime }));
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Time's up! ⏰",
-        body: "Your focus session has ended.",
-        sound: true,
-      },
-      trigger: { 
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: initialTime + 3,
-      },
-    });
-  };
-
-  const stopTimer = async () => {
-    setIsActive(false);
-    setTime(initialTime);
-    await AsyncStorage.removeItem('activeTimer');
-    await Notifications.cancelAllScheduledNotificationsAsync();
+  const toggleTimer = () => {
+    setIsActive(!isActive);
   };
 
   const handleSliderChange = (value: number) => {
@@ -181,86 +124,6 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-
-  async function schedulePushNotification() {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "You've got mail! 📬",
-        body: 'Here is the notification body',
-        data: { data: 'goes here', test: { test1: 'more data' } },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 2,
-      },
-    });
-  }
-
-  async function registerForPushNotificationsAsync() {
-    let token;
-
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('myNotificationChannel', {
-        name: 'A channel is needed for the permissions prompt to appear',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
-
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') {
-        alert('Failed to get push token for push notification!');
-        return;
-      }
-      // Learn more about projectId:
-      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
-      // EAS projectId is used here.
-      try {
-        const projectId =
-          Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-        if (!projectId) {
-          throw new Error('Project ID not found');
-        }
-        token = (
-          await Notifications.getExpoPushTokenAsync({
-            projectId,
-          })
-        ).data;
-        console.log(token);
-      } catch (e) {
-        token = `${e}`;
-      }
-    } else {
-      alert('Must use physical device for Push Notifications');
-    }
-
-    return token;
-  }
-
-  const renderOldTimer = async () => {
-    const savedData = await AsyncStorage.getItem('activeTimer');
-    if (savedData) {
-      const { startTime, duration } = JSON.parse(savedData);
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = duration - elapsed;
-      if (remaining > 0) {
-        setTime(remaining);
-        setInitialTime(duration);
-        setIsActive(true);
-      } else {
-        stopTimer();
-        onComplete?.();
-      }
-    }
   };
 
   return (
@@ -282,7 +145,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
               onPress={() => setWasAwayTooLong(false)}
               accessibilityLabel="Close reward modal"
             >
-              <Text style={styles.closeButtonText}>Okay</Text>
+              <Text style={styles.closeButtonText}>Yay!</Text>
             </Pressable>
           </View>
         </View>
@@ -318,7 +181,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
 
         <TouchableOpacity
           style={[styles.button, isActive ? styles.stopButton : styles.startButton]}
-          onPress={isActive ? stopTimer : startTimer}
+          onPress={toggleTimer}
         >
           <Text style={styles.buttonText}>
             {isActive ? 'Give Up' : 'Start'}

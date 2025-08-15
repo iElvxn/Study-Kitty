@@ -6,7 +6,7 @@ import { CatSpot } from '@/app/models/upgrade';
 import { useAuth } from '@clerk/clerk-expo';
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, View } from 'react-native';
+import { AppState, Dimensions, View } from 'react-native';
 import { fetchUserUpgrades, getUpgrades } from '../upgrade';
 
 
@@ -19,6 +19,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const [ownedCats, setOwnedCats] = useState<CatRecord[]>([]);
     const [cats, setCats] = useState<Cat[]>([]);
     const [spots, setSpots] = useState<CatSpot[]>([{ x: 150, y: 150 }]);
+    const [lastActiveTime, setLastActiveTime] = useState<number>(Date.now());
+    const [spawnInterval, setSpawnInterval] = useState<number>(5000);
     const { getToken } = useAuth();
     const intervalRef = useRef<number | null>(null);
     const ownedCatsRef = useRef<CatRecord[]>([]);
@@ -36,8 +38,9 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
 
         // Calculate spawn interval: session length / total cat spots
         const totalSpots = spotsRef.current.length;
-        const spawnInterval = totalSpots > 0 ? (sessionTime * 1000) / totalSpots : 5000; // fallback to 5 seconds
-
+        const newSpawnInterval = totalSpots > 0 ? (sessionTime * .75 * 1000) / totalSpots : 5000; //so all cats spawn within 75% of session
+        setSpawnInterval(newSpawnInterval);
+        setLastActiveTime(Date.now());
         console.log(`Session length: ${sessionTime}s, Total spots: ${totalSpots}, Spawn interval: ${spawnInterval}ms`);
 
         intervalRef.current = setInterval(() => {
@@ -131,6 +134,24 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
             stopInterval();
         };
     }, [])
+
+    // Handle app state changes for away detection and timer completion
+    useEffect(() => {
+        const handleAppStateChange = async (nextAppState: string) => {
+            if (nextAppState === 'active') {
+                const timeAway = Date.now() - lastActiveTime;
+                const catsToSpawn = Math.floor(timeAway / spawnInterval);
+                for (let i = 0; i < catsToSpawn; i++) {
+                    spawnCat();
+                }
+            } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+                setLastActiveTime(Date.now());
+            }
+        };
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+        return () => subscription?.remove();
+    }, [lastActiveTime, spawnInterval]);
+
 
     const spawnCat = async () => {
         // Use setCats to get the latest cats state
