@@ -11,7 +11,7 @@ import { useUpgrade } from '../UpgradeContext';
 import { apiRequest } from '../aws/client';
 import { getCachedUserData, setCachedUserData } from '../aws/users';
 import { Upgrade } from '../models/upgrade';
-import Cats from "./components/Cats";
+import Cats from './components/Cats';
 import FocusTimer from './components/FocusTimer';
 import Furniture from './components/Furniture';
 import Tags from './components/Tags';

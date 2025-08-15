@@ -3,7 +3,7 @@ import Slider from '@react-native-community/slider';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AppState, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getSettings } from '../settings';
 
@@ -30,15 +30,31 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
   const [isActive, setIsActive] = useState(false);
   const [time, setTime] = useState(DEFAULT_TIMER_TIME);
   const [initialTime, setInitialTime] = useState(DEFAULT_TIMER_TIME);
-  const [awayStartTime, setAwayStartTime] = useState<number | null>(null);
   const [wasAwayTooLong, setWasAwayTooLong] = useState(false);
   const [expoPushToken, setExpoPushToken] = useState('');
   const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>(
-    undefined
-  );
+  const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
+
+  // Use refs to avoid stale closure issues
+  const isActiveRef = useRef(isActive);
+  const hasProcessedCompletionRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  const onStateChangeRef = useRef(onStateChange);
+  const onSessionTimeChangeRef = useRef(onSessionTimeChange);
+
+  // Keep refs updated
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
 
   useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onStateChangeRef.current = onStateChange;
+    onSessionTimeChangeRef.current = onSessionTimeChange;
+  }, [onComplete, onStateChange, onSessionTimeChange]);
+
+  useEffect(() => {
+    console.log("test")
     registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
 
     if (Platform.OS === 'android') {
@@ -58,116 +74,177 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     };
   }, []);
 
+  useEffect(() => { //if app refreshes?
+    const loadOldTimer = async () => {
+      await renderOldTimer();
+    }
+    loadOldTimer();
+  }, []);
+
   // Handle app state changes for away detection and timer completion
   useEffect(() => {
-    const loadTimer = async () => {
-      await renderOldTimer();
-    };
-
     const handleAppStateChange = async (nextAppState: string) => {
       const settings = await getSettings();
-
+      
       if (nextAppState === 'active') {
         // App came to foreground
-        if (awayStartTime && isActive && settings.hardMode) {
-          const timeAway = Date.now() - awayStartTime;
-          const secondsAway = Math.floor(timeAway / 1000);
-
-          if (secondsAway > AWAY_TIME_LIMIT) {
-            setWasAwayTooLong(true);
-
-            // Stop the timer immediately
-            stopTimer();
+        if (isActiveRef.current) {
+          const savedAwayStartTime = await AsyncStorage.getItem('awayStartTime');
+          if (savedAwayStartTime && settings.hardMode) {
+            const awayStartTime = parseInt(savedAwayStartTime, 10);
+            const timeAway = Date.now() - awayStartTime;
+            const secondsAway = Math.floor(timeAway / 1000);
+            console.log("secondsAway", secondsAway)
+            if (secondsAway > AWAY_TIME_LIMIT) {
+              setWasAwayTooLong(true);
+              await stopTimer();
+              return;
+            }
+          }
+          
+          // Check if timer should be completed
+          const savedData = await AsyncStorage.getItem('activeTimer');
+          if (savedData) {
+            const { startTime, duration } = JSON.parse(savedData);
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const remaining = duration - elapsed;
+            
+            if (remaining <= 0) {
+              // Timer completed while in background
+              await stopTimer();
+              onCompleteRef.current?.();
+              return;
+            }
           }
         }
-        setAwayStartTime(null);
-
-        //when user comes back to app, set the timer to calculated time left
-        renderOldTimer();
-
-        // Handle timer completion when returning from background
-        if (isActive && time <= 0) {
-          if (!wasAwayTooLong) {
-            onComplete?.();
-          }
-          setIsActive(false);
-          setTime(initialTime);
-          setWasAwayTooLong(false);
-        }
+        // Always try to render old timer state when coming to foreground
+        await AsyncStorage.removeItem('awayStartTime');
+        await renderOldTimer();
       } else if (nextAppState === 'background' || nextAppState === 'inactive') {
-        // App went to background
-        if (isActive) {
-          setAwayStartTime(Date.now());
+        // App went to background - just update the away start time
+        if (isActiveRef.current) {
+          await AsyncStorage.setItem('awayStartTime', Date.now().toString());
+          console.log(new Date(Date.now()).toISOString())
         }
       }
     };
-    loadTimer();
+    
+    // Initial state check
+    const init = async () => {
+      const currentState = AppState.currentState;
+      if (currentState === 'active') {
+        await renderOldTimer();
+      }
+    };
+    
+    init();
+    
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [isActive, awayStartTime, initialTime, time, onComplete, wasAwayTooLong]);
+    return () => {
+      subscription?.remove();
+    };
+  }, []); // Empty dependencies - use refs to avoid stale closures
 
   // Handle timer countdown
   useEffect(() => {
     let interval: number | null = null;
+    let mounted = true;
 
-    //count down the seconds using background timer
+    const tick = () => {
+      if (mounted) {
+        setTime(prev => {
+          if (prev <= 1) {
+            // Time's up
+            if (interval) clearInterval(interval);
+            if (!wasAwayTooLong) {
+              onCompleteRef.current?.();
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
+    };
+
     if (isActive && time > 0) {
-      interval = setInterval(() => setTime(prev => prev - 1), 1000);
+      interval = setInterval(tick, 1000);
     } else if (isActive && time === 0) {
-      // Timer completed!
       if (interval) clearInterval(interval);
-
-      // Only call onComplete if user wasn't away too long
       if (!wasAwayTooLong) {
-        onComplete?.();
+        onCompleteRef.current?.();
       }
 
       setIsActive(false);
       setTime(initialTime);
-      setWasAwayTooLong(false); // Reset for next session
+      setWasAwayTooLong(false);
     } else if (interval) {
       clearInterval(interval);
-      setIsActive(false);
-      setTime(initialTime);
     }
 
-    // Notify parent component of state change
-    onStateChange?.(isActive);
+    // Notify parent component of state change using ref
+    onStateChangeRef.current?.(isActive);
 
     return () => {
+      mounted = false;
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [isActive, time, initialTime, onStateChange, onComplete, wasAwayTooLong]);
+  }, [isActive, wasAwayTooLong]); // Removed time and initialTime from deps
 
   // Notify parent when session time changes
   useEffect(() => {
-    onSessionTimeChange?.(initialTime);
-  }, [initialTime, onSessionTimeChange]);
+    onSessionTimeChangeRef.current?.(initialTime);
+  }, [initialTime]);
 
   const startTimer = async () => {
+    if (isActive) return; // Prevent multiple starts
+    
+    // Clean up any existing notifications and timer state
+    console.log("canceling notification")
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    hasProcessedCompletionRef.current = false;
     setIsActive(true);
+    
+    // Save the initial timer state
     const startTime = Date.now();
-    await AsyncStorage.setItem('activeTimer', JSON.stringify({ startTime, duration: initialTime }));
+    const timerData = { startTime, duration: initialTime };
+    await AsyncStorage.setItem('activeTimer', JSON.stringify(timerData));
+    console.log('Started timer:', timerData);
+    
+    // Schedule new notification
+    console.log("scheduling notification")
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Time's up! ⏰",
         body: "Your focus session has ended.",
         sound: true,
       },
-      trigger: { 
+      trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: initialTime + 3,
+        seconds: initialTime, // Use the full duration for the notification
       },
     });
   };
 
   const stopTimer = async () => {
+    console.log("Stopping timer and cleaning up");
+    // Set ref first to prevent race conditions
+    isActiveRef.current = false;
+    // Then update state
     setIsActive(false);
     setTime(initialTime);
-    await AsyncStorage.removeItem('activeTimer');
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    hasProcessedCompletionRef.current = true; // Mark as processed to prevent completion
+    
+    try {
+      await AsyncStorage.removeItem('activeTimer');
+      await Notifications.cancelAllScheduledNotificationsAsync();
+    } catch (error) {
+      console.error("Error stopping timer:", error);
+    } finally {
+      // Ensure we're in a clean state
+      isActiveRef.current = false;
+    }
   };
 
   const handleSliderChange = (value: number) => {
@@ -182,21 +259,6 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     const seconds = time % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
-
-
-  async function schedulePushNotification() {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "You've got mail! 📬",
-        body: 'Here is the notification body',
-        data: { data: 'goes here', test: { test1: 'more data' } },
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: 2,
-      },
-    });
-  }
 
   async function registerForPushNotificationsAsync() {
     let token;
@@ -221,9 +283,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
         alert('Failed to get push token for push notification!');
         return;
       }
-      // Learn more about projectId:
-      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
-      // EAS projectId is used here.
+
       try {
         const projectId =
           Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
@@ -247,20 +307,74 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
   }
 
   const renderOldTimer = async () => {
-    const savedData = await AsyncStorage.getItem('activeTimer');
-    if (savedData) {
+    console.log("Checking for active timer...");
+    
+    if (hasProcessedCompletionRef.current) {
+      console.log("Already processed completion, skipping");
+      return;
+    }
+    
+    try {
+      const savedData = await AsyncStorage.getItem('activeTimer');
+      console.log("Found saved timer data:", savedData);
+      
+      if (!savedData) {
+        console.log("No active timer found");
+        return;
+      }
+      
       const { startTime, duration } = JSON.parse(savedData);
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = duration - elapsed;
+      const remaining = Math.max(0, duration - elapsed);
+      
       if (remaining > 0) {
-        setTime(remaining);
+        console.log(`Restoring timer: ${remaining}s remaining of ${duration}s session`);
         setInitialTime(duration);
+        setTime(remaining);
         setIsActive(true);
+        isActiveRef.current = true;
+        
+        // Only reschedule notification if there's still time left
+        // await Notifications.scheduleNotificationAsync({
+        //   content: {
+        //     title: "Time's up! ⏰",
+        //     body: "Your focus session has ended.",
+        //     sound: true,
+        //   },
+        //   trigger: {
+        //     type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        //     seconds: remaining,
+        //   },
+        // });
       } else {
-        stopTimer();
-        onComplete?.();
+        console.log("Timer completed while away, cleaning up");
+        await cleanupTimerState(duration);
       }
-    }
+  } catch (error) {
+    console.error("Error in renderOldTimer:", error);
+    await cleanupTimerState(initialTime);
+  }
+};
+  
+  const cleanupTimerState = async (duration: number) => {
+    // Mark as processed FIRST to prevent re-entry
+    hasProcessedCompletionRef.current = true;
+    
+    // Clean up storage and notifications
+    await AsyncStorage.removeItem('activeTimer');
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    
+    // Reset timer state
+    setIsActive(false);
+    isActiveRef.current = false;
+    setTime(duration);
+    setInitialTime(duration);
+    setWasAwayTooLong(false);
+    
+    // Notify completion on next tick
+    setTimeout(() => {
+      onCompleteRef.current?.();
+    }, 0);
   };
 
   return (
@@ -368,14 +482,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_500Medium',
     opacity: 0.9,
   },
-
   progressBarContainer: {
     width: '100%',
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   progressBarBackground: {
     width: 225,
     height: 5,
@@ -388,7 +500,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6D5BC',
     opacity: 0.7,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -439,4 +550,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Quicksand_700Bold',
   },
-}); 
+});

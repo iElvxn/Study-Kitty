@@ -5,6 +5,7 @@ import { CatRecord } from '@/app/models/catRecord';
 import { CatSpot } from '@/app/models/upgrade';
 import { useAuth } from '@clerk/clerk-expo';
 import { Image } from 'expo-image';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Dimensions, View } from 'react-native';
 import { fetchUserUpgrades, getUpgrades } from '../upgrade';
@@ -31,6 +32,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const BASE_WIDTH = 390;  // iPhone 13 width
     const BASE_HEIGHT = 844; // iPhone 13 height
 
+    useKeepAwake(); //prevent screen from turning off
+
     const startInterval = () => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current);
@@ -45,7 +48,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
 
         intervalRef.current = setInterval(() => {
             spawnCat();
-        }, spawnInterval);
+        }, newSpawnInterval);
     };
 
     const stopInterval = () => {
