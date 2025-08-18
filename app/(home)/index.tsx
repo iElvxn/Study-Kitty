@@ -72,15 +72,17 @@ export default function HomeScreen() {
         }
       };
       const checkProStatus = async () => {
-        try {
-          const customerInfo = await Purchases.getCustomerInfo();
-          if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
-            setIsPro(true);
+        setTimeout(async () => {
+          try {
+            const customerInfo = await Purchases.getCustomerInfo();
+            if (typeof customerInfo.entitlements.active["Pro"] !== "undefined") {
+              setIsPro(true);
+            }
+          } catch (error) {
+            console.error("Error checking pro status:", error);
+            setIsPro(false);
           }
-        } catch (error) {
-          console.error("Error checking pro status:", error);
-          setIsPro(false);
-        }
+        }, 500);
       };
 
       checkProStatus();

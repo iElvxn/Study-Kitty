@@ -4,10 +4,9 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Image } from 'expo-image';
 import { Redirect, Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, ViewStyle } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { initializeUser } from '../aws/users';
-import { StyleSheet, ViewStyle } from 'react-native';
 
 const contentStyle: ViewStyle = {
   flex: 1,

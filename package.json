@@ -55,7 +55,8 @@
     "reanimated-color-picker": "^4.1.0",
     "expo-notifications": "~0.31.4",
     "expo-device": "~7.1.4",
-    "expo-keep-awake": "~14.1.4"
+    "expo-keep-awake": "~14.1.4",
+    "expo-updates": "~0.28.17"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
