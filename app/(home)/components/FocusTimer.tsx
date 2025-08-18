@@ -150,7 +150,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     let interval: number | null = null;
     let mounted = true;
 
-    const tick = () => {
+    const tick = async () => {
       if (mounted) {
         setTime(prev => {
           if (prev <= 1) {
@@ -158,6 +158,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
             if (interval) clearInterval(interval);
             if (!wasAwayTooLong) {
               onCompleteRef.current?.();
+              stopTimer();
             }
             return 0;
           }
@@ -232,6 +233,7 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     // Set ref first to prevent race conditions
     isActiveRef.current = false;
     // Then update state
+    setWasAwayTooLong(false);
     setIsActive(false);
     setTime(initialTime);
     hasProcessedCompletionRef.current = true; // Mark as processed to prevent completion
