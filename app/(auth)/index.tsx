@@ -46,12 +46,19 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: 24,
-        paddingTop: '30%',
+        paddingTop: 24,
+        paddingBottom: 40,
+        maxWidth: 500,
+        width: '100%',
+        alignSelf: 'center',
     },
     imageContainer: {
         width: '100%',
-        height: 340,
+        maxHeight: 400,
+        flex: 1,
+        maxWidth: 500,
         alignItems: 'center',
         justifyContent: 'flex-end',
     },
@@ -83,6 +90,8 @@ const styles = StyleSheet.create({
         width: '100%',
         gap: 16,
         paddingHorizontal: 20,
+        marginTop: 'auto',
+        paddingBottom: 20,
     },
     button: {
         width: '100%',
@@ -109,3 +118,4 @@ const styles = StyleSheet.create({
         color: '#000',
     },
 });
+   

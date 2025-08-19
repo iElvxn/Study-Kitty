@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     flex: .7,
+    bottom: 0,
     backgroundColor: '#000',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Purchases from 'react-native-purchases';
 import { apiRequest } from '../aws/client';
 
@@ -162,7 +162,11 @@ export default function Settings() {
                 colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
                 style={styles.overlay}
             />
-            <View style={styles.container}>
+            <ScrollView 
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.container}
+                showsVerticalScrollIndicator={false}
+            >
                 <Text style={styles.title}>Settings</Text>
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Study Settings</Text>
@@ -217,7 +221,7 @@ export default function Settings() {
                         <Text style={styles.deleteButtonText}>Delete Account</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </ScrollView>
         </>
     );
 }
@@ -240,7 +244,6 @@ const styles = StyleSheet.create({
     },
     container: {
         alignItems: 'center',
-        flex: 1,
     },
     title: {
         paddingTop: 80,
