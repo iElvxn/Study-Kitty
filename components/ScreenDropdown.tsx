@@ -13,6 +13,7 @@ const SCREENS = [
   { name: 'Purrdex', route: '/purrdex' as const, icon: 'person.fill' as const },
   { name: 'Statistics', route: '/statistics' as const, icon: 'chart.bar.fill' as const },
   { name: 'Settings', route: '/settings' as const, icon: 'gear' as const },
+  {name: 'Tutorial', route: '/tutorial' as const, icon: 'questionmark.circle.fill' as const},
   { name: 'Pro', route: '/pro' as const, icon: 'crown.fill' as const },
 ] as const;
 

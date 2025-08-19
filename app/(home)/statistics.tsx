@@ -344,7 +344,7 @@ export default function Statistics() {
       },
       {
         title: 'Current Streak',
-        value: `${productivity.allTimeStats.currentStreak}`,
+        value: `${productivity.allTimeStats.currentStreak} 🔥`,
         subtitle: 'days',
         color: '#FF6B6B'
       },
@@ -372,7 +372,7 @@ export default function Statistics() {
       },
       {
         title: 'Current Streak',
-        value: `${productivity.allTimeStats.currentStreak}`,
+        value: `${productivity.allTimeStats.currentStreak} 🔥`,
         subtitle: 'days',
         color: '#FF6B6B'
       },

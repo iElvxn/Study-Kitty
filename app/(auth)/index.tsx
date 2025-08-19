@@ -67,13 +67,13 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 44,
-        fontFamily: 'Poppins-Bold',
+        fontFamily: 'Quicksand_700Bold',
         color: '#000',
         marginBottom: 8,
     },
     subtitle: {
-        fontSize: 22,
-        fontFamily: 'Poppins-Regular',
+        fontSize: 20,
+        fontFamily: 'Quicksand_500Medium',
         color: '#000',
         opacity: 0.7,
         textAlign: 'center',

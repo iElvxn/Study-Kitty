@@ -29,7 +29,7 @@ export default function Settings() {
     const { signOut } = useAuth();
     const { user } = useUser();
     const [settings, setSettings] = useState({
-        hardMode: true,
+        hardMode: false,
         chime: true,
         vibration: true,
     });
@@ -168,7 +168,7 @@ export default function Settings() {
                     <Text style={styles.sectionTitle}>Study Settings</Text>
                     <SettingItem
                         title="Hard Mode"
-                        description="Enable additional challenges and restrictions"
+                        description="Enable for strict restrictions and no distractions"
                         value={settings.hardMode}
                         onValueChange={() => toggleSetting('hardMode')}
                     />

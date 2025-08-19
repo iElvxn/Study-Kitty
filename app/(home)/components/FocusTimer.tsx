@@ -88,38 +88,30 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
       
       if (nextAppState === 'active') {
         // App came to foreground
+        let shouldStopTimer = false;
+        
         if (isActiveRef.current) {
           const savedAwayStartTime = await AsyncStorage.getItem('awayStartTime');
-          if (savedAwayStartTime && settings.hardMode) {
+          if (savedAwayStartTime) {
             const awayStartTime = parseInt(savedAwayStartTime, 10);
             const timeAway = Date.now() - awayStartTime;
             const secondsAway = Math.floor(timeAway / 1000);
-            console.log("secondsAway", secondsAway)
-            if (secondsAway > AWAY_TIME_LIMIT) {
+            console.log("secondsAway", secondsAway);
+            
+            if (settings.hardMode && secondsAway > AWAY_TIME_LIMIT) {
+              shouldStopTimer = true;
               setWasAwayTooLong(true);
               await stopTimer();
-              return;
             }
-          }
-          
-          // Check if timer should be completed
-          const savedData = await AsyncStorage.getItem('activeTimer');
-          if (savedData) {
-            const { startTime, duration } = JSON.parse(savedData);
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const remaining = duration - elapsed;
-            
-            if (remaining <= 0) {
-              // Timer completed while in background
-              await stopTimer();
-              onCompleteRef.current?.();
-              return;
-            }
+            // Remove the away start time after we've checked it
+            await AsyncStorage.removeItem('awayStartTime');
           }
         }
-        // Always try to render old timer state when coming to foreground
-        await AsyncStorage.removeItem('awayStartTime');
-        await renderOldTimer();
+        
+        // Only render old timer if we didn't just stop it for being away too long
+        if (!shouldStopTimer) {
+          await renderOldTimer();
+        }
       } else if (nextAppState === 'background' || nextAppState === 'inactive') {
         // App went to background - just update the away start time
         if (isActiveRef.current) {
@@ -233,7 +225,6 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     // Set ref first to prevent race conditions
     isActiveRef.current = false;
     // Then update state
-    setWasAwayTooLong(false);
     setIsActive(false);
     setTime(initialTime);
     hasProcessedCompletionRef.current = true; // Mark as processed to prevent completion
@@ -247,6 +238,8 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
       // Ensure we're in a clean state
       isActiveRef.current = false;
     }
+
+    console.log("Away for too long:", wasAwayTooLong)
   };
 
   const handleSliderChange = (value: number) => {
@@ -371,7 +364,6 @@ export default function FocusTimer({ onStateChange, onSessionTimeChange, onCompl
     isActiveRef.current = false;
     setTime(duration);
     setInitialTime(duration);
-    setWasAwayTooLong(false);
     
     // Notify completion on next tick
     setTimeout(() => {
