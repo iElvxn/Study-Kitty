@@ -102,6 +102,9 @@ export default function HomeScreen() {
   }, []);
 
   const handleSessionComplete = async () => {
+    if (sessionTime < 60) {
+      return;
+    }
     try {
       const token = await getToken();
       if (!token) {
