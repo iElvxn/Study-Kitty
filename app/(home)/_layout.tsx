@@ -1,8 +1,9 @@
 import { ScreenDropdown } from '@/components/ScreenDropdown';
 import { TimerProvider } from '@/context/TimerContext';
 import { useAuth } from '@clerk/clerk-expo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
-import { Redirect, Stack } from 'expo-router';
+import { Redirect, router, Stack } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import { Platform, ViewStyle } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
@@ -28,6 +29,7 @@ export default function AuthRoutesLayout() {
           await initializeUser(token);
           console.log("User initialized");
           hasInitalizedUser.current = true;
+          checkTutorial();
         } else {
           console.log('No token yet');
         }
@@ -50,7 +52,7 @@ export default function AuthRoutesLayout() {
             apiKey: "appl_MXGKbHagpEJVmmLaHEPltAQJcPz"
           });
         }
-        
+
         await getCustomerInfo();
         clearImageCache();
       } catch (error) {
@@ -75,6 +77,38 @@ export default function AuthRoutesLayout() {
     Image.clearMemoryCache();
     Image.clearDiskCache();
   }
+
+  const checkTutorial = async () => {
+    if (!isSignedIn) return;
+    
+    const tutorialCompleted = await getTutorialCompleted();
+    if (!tutorialCompleted) {
+      // Mark as completed so it doesn't show again
+      await setTutorialCompleted(true);
+      // Navigate to tutorial
+      router.push('/(home)/tutorial');
+    }
+  };
+
+  const getTutorialCompleted = async (): Promise<boolean> => {
+    try {
+      const value = await AsyncStorage.getItem("tutorial_completed");
+      return value === 'true';
+    } catch (e) {
+      console.error('Error getting tutorial status', e);
+      return true; // Default to true to avoid showing tutorial if there's an error
+    }
+  };
+
+  const setTutorialCompleted = async (completed: boolean): Promise<void> => {
+    try {
+      await AsyncStorage.setItem("tutorial_completed", completed.toString());
+    } catch (e) {
+      console.error('Error setting tutorial status', e);
+    }
+  };
+
+  
 
 
   if (!isSignedIn) {
@@ -106,21 +140,21 @@ export default function AuthRoutesLayout() {
           }),
         }}
       >
-        <Stack.Screen 
-          name="index" 
+        <Stack.Screen
+          name="index"
           options={{
             // Optimize home screen
             animation: 'fade',
-          }} 
+          }}
         />
-        <Stack.Screen 
-          name="upgrade" 
+        <Stack.Screen
+          name="upgrade"
           options={{
             // Optimize upgrade screen
             animation: 'slide_from_right',
             // Clear cache when leaving this screen
             contentStyle: [contentStyle, { backgroundColor: '#1E1E1E' }],
-          }} 
+          }}
         />
       </Stack>
     </TimerProvider>
