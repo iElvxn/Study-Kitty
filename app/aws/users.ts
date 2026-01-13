@@ -29,7 +29,7 @@ export const setCachedUserData = async (userData: UserRecord): Promise<void> => 
 
 export const clearUserCache = async (): Promise<void> => {
     try {
-        AsyncStorage.removeItem("userData");
+        await AsyncStorage.removeItem("userData");
         console.log('User cache cleared');
     } catch (error) {
         console.error('Error clearing user cache:', error);

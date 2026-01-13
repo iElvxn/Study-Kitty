@@ -23,13 +23,22 @@ export default function SignUpScreen() {
 
   // Reset any existing session when mounting the sign-up screen
   React.useEffect(() => {
+    let isMounted = true;
+
     const resetSession = async () => {
       try {
-        await signOut();
+        if (isMounted) {
+          await signOut();
+        }
       } catch (err) {
+        // Ignore errors - user may not be signed in
       }
     };
     resetSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   WebBrowser.maybeCompleteAuthSession()

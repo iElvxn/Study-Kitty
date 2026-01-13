@@ -125,47 +125,29 @@ export default function HomeScreen() {
         audioPlayer.play();
       }
 
-      // Check pro status and then make the API call with the updated value
+      // Check pro status
       const customerInfo = await Purchases.getCustomerInfo();
       const isUserPro = typeof customerInfo.entitlements.active["Pro"] !== "undefined";
-      
-      // Update state and make API call in one go
-      setIsPro(prevIsPro => {
-        const shouldUpdate = prevIsPro !== isUserPro;
-        if (shouldUpdate) {
-          // This will be logged with the updated value in the next render
-          console.log("User is pro:", isUserPro);
-        }
-        
-        // Make the API call with the correct pro status
-        (async () => {
-          try {
-            console.log("Making API call with isPro:", isUserPro);
-            const res = await apiRequest("/session", "POST", token, { 
-              sessionDuration: sessionTime, 
-              tag: selectedTag, 
-              isPro: isUserPro 
-            });
-            
-            const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
-            const newBalance = data.newBalance;
-            const newProductivity = data.newProductivity;
 
-            setEarnedAmount(String(data.coinsAwarded));
+      // Update state
+      setIsPro(isUserPro);
 
-            // Update the cache
-            const cachedUser = await getCachedUserData();
-            if (cachedUser) {
-              const updatedUser = { ...cachedUser, coins: newBalance, productivity: newProductivity };
-              await setCachedUserData(updatedUser);
-            }
-          } catch (error) {
-            console.error("Error in session completion:", error);
-          }
-        })();
-        
-        return isUserPro;
+      // Make API call
+      const res = await apiRequest("/session", "POST", token, {
+        sessionDuration: sessionTime,
+        tag: selectedTag,
+        isPro: isUserPro
       });
+
+      const data = res.data as { newBalance: number; coinsAwarded: number, newProductivity: any };
+      setEarnedAmount(String(data.coinsAwarded));
+
+      // Update the cache
+      const cachedUser = await getCachedUserData();
+      if (cachedUser) {
+        const updatedUser = { ...cachedUser, coins: data.newBalance, productivity: data.newProductivity };
+        await setCachedUserData(updatedUser);
+      }
     } catch (error) {
       console.log("Error in handleSessionComplete:", error);
     }

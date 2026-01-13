@@ -16,7 +16,6 @@ export default function ResetPasswordScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
 
   const handleResetPassword = async () => {
     if (!isLoaded) return;
@@ -105,8 +104,7 @@ export default function ResetPasswordScreen() {
         strategy: "reset_password_email_code",
         identifier: email,
       });
-      
-      setCodeSent(true);
+
       Alert.alert('Success', 'A new verification code has been sent to your email.');
     } catch (err: any) {
       console.error(JSON.stringify(err, null, 2));
