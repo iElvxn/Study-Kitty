@@ -1,4 +1,4 @@
-const BASE_URL = "https://z7pfhq35c7.execute-api.us-east-1.amazonaws.com/production/";
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export const apiRequest = async <T>(
   endpoint: string,

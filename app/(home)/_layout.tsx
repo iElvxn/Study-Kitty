@@ -49,7 +49,7 @@ export default function AuthRoutesLayout() {
 
         if (Platform.OS === 'ios') {
           Purchases.configure({
-            apiKey: "appl_MXGKbHagpEJVmmLaHEPltAQJcPz"
+            apiKey: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY!
           });
         }
 
