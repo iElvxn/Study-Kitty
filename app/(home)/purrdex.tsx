@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
   rarityFilterText: {
     fontSize: 14,
     color: '#2D1810',
-    fontFamily: 'Quicksand_600SemiBold',
+    fontFamily: 'Quicksand_500Medium',
   },
   rarityFilterTextActive: {
     color: '#2D1810',
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: '#2D1810',
-    fontFamily: 'Quicksand_600SemiBold',
+    fontFamily: 'Quicksand_500Medium',
   },
   catsGrid: {
     paddingBottom: 20,

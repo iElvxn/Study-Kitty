@@ -240,14 +240,14 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     marginTop: 20,
     marginBottom: 8,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   subtitle: {
     fontSize: 20,
     fontWeight: 400,
     marginBottom: 24,
     color: '#000',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Quicksand_400Regular',
   },
   inputContainer: {
     marginBottom: 16,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     padding: 16,
     color: '#fff',
     fontSize: 16,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Quicksand_400Regular',
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -289,14 +289,14 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Quicksand_700Bold',
   },
   errorText: {
     color: '#FF3B30',
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Quicksand_400Regular',
   },
   resendContainer: {
     flexDirection: 'row',
@@ -306,11 +306,11 @@ const styles = StyleSheet.create({
   resendText: {
     color: '#999',
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Quicksand_400Regular',
   },
   resendLink: {
     color: '#C7B6F5',
     fontSize: 14,
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: 'Quicksand_700Bold',
   },
 });

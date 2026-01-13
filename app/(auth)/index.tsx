@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontSize: 16,
-        fontFamily: 'Poppins-Medium',
+        fontFamily: 'Quicksand_500Medium',
     },
     loginText: {
         color: '#fff',

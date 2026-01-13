@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   },
   periodButtonText: {
     color: 'rgba(255, 255, 255, 0.7)',
-    fontFamily: 'Quicksand_600SemiBold',
+    fontFamily: 'Quicksand_500Medium',
   },
   periodButtonTextActive: {
     color: '#000',

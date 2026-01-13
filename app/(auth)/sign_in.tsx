@@ -139,8 +139,8 @@ export default function SignInScreen() {
           <TouchableOpacity onPress={handleBackPress}>
             <IconSymbol name="chevron.left" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold' }]}>Lets Sign You In</Text>
-          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular' }]}>Return to your cat cafe focus zone
+          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Quicksand_700Bold' }]}>Lets Sign You In</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Quicksand_400Regular' }]}>Return to your cat cafe focus zone
           </Text>
         </View>
       </View>
@@ -345,6 +345,6 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: '#C7B6F5',
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Quicksand_400Regular',
   },
 });

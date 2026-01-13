@@ -239,8 +239,8 @@ export default function SignUpScreen() {
           <TouchableOpacity onPress={handleBackPress}>
             <IconSymbol name="chevron.left" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Poppins-Bold' }]}>Get Started</Text>
-          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Poppins-Regular' }]}>Enter distraction-free focus in the cat cafe</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 38, fontWeight: '700', textAlign: 'left', fontFamily: 'Quicksand_700Bold' }]}>Get Started</Text>
+          <Text style={[styles.title, { color: '#000', fontSize: 28, fontWeight: '400', textAlign: 'left', fontFamily: 'Quicksand_400Regular' }]}>Enter distraction-free focus in the cat cafe</Text>
         </View>
       </View>
 
