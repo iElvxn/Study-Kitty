@@ -121,9 +121,11 @@ const UpgradeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const { triggerRefresh } = useUpgrade();
 
-    // Only preload background image, not all upgrade images
+    // Clear memory cache on unmount to prevent memory leaks
     useEffect(() => {
-        Image.prefetch(require('@/assets/images/background.jpg'));
+        return () => {
+            Image.clearMemoryCache();
+        };
     }, []);
 
     useEffect(() => {
@@ -207,6 +209,7 @@ const UpgradeScreen = () => {
                 style={styles.backgroundImage}
                 contentFit="cover"
                 cachePolicy="disk"
+                recyclingKey="main-background"
                 priority="low"
                 transition={200}
             />
@@ -219,6 +222,7 @@ const UpgradeScreen = () => {
                         style={styles.backgroundImage}
                         contentFit="cover"
                         cachePolicy="disk"
+                        recyclingKey="loading-background"
                     />
                     <View style={styles.darkOverlay} />
                     <ActivityIndicator size="large" color="#B6917E" />

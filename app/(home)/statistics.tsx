@@ -56,6 +56,13 @@ export default function Statistics() {
     checkProStatus();
   }, []);
 
+  // Clear memory cache on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Image.clearMemoryCache();
+    };
+  }, []);
+
   // Fetch user data when screen comes into focus
   useFocusEffect(
     useCallback(() => {

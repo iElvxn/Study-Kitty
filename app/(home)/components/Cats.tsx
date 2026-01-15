@@ -26,6 +26,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
     const intervalRef = useRef<number | null>(null);
     const ownedCatsRef = useRef<CatRecord[]>([]);
     const spotsRef = useRef<CatSpot[]>([]);
+    const allCatsDataRef = useRef(getAllCats()); // Memoize to avoid recreating on every spawn
 
     const windowWidth = Dimensions.get('window').width;
     const windowHeight = Dimensions.get('window').height;
@@ -99,9 +100,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 spotsRef.current = spots; // Update ref
 
                 // Convert object format to CatRecord[] with proper names
-                const allCatsData = getAllCats();
                 const catsArray = Object.entries(userData.cats || {}).map(([id, data]: [string, any]) => {
-                    const catData = allCatsData.find(cat => cat.id === id);
+                    const catData = allCatsDataRef.current.find(cat => cat.id === id);
                     return {
                         id,
                         name: catData?.name || id,
@@ -135,6 +135,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
         return () => {
             isActive = false;
             stopInterval();
+            Image.clearMemoryCache(); // Clear memory on unmount
         };
     }, [])
 
@@ -180,8 +181,7 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                 }
 
                 const randomCat = currentOwnedCats[Math.floor(Math.random() * currentOwnedCats.length)];
-                const allCatsData = getAllCats();
-                const catData = allCatsData.find(cat => cat.id === randomCat.id);
+                const catData = allCatsDataRef.current.find(cat => cat.id === randomCat.id);
 
                 if (!catData) {
                     console.log("Cat data not found for:", randomCat.id);
@@ -221,6 +221,8 @@ export default function Cats({ sessionTime = 25 * 60 }: CatsProps) {
                     source={cat.animation}
                     style={{ position: 'absolute', left: cat.scaledSpot.x, top: cat.scaledSpot.y, width: 60, height: 60 }}
                     contentFit="contain"
+                    cachePolicy="memory-disk"
+                    recyclingKey={`cat-${cat.id}`}
                 />
             ))}
         </View>

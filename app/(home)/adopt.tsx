@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/clerk-expo';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -54,6 +55,25 @@ const AdoptScreen: React.FC = () => {
   const [userData, setUserData] = useState<any>(null);
   const [tierIndex, setTierIndex] = useState(0);
   const selectedTier = TIERS[tierIndex];
+  const [isFocused, setIsFocused] = useState(true);
+
+  // Only render GIF when screen is focused - releases native memory when navigating away
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => {
+        setIsFocused(false);
+        Image.clearMemoryCache();
+      };
+    }, [])
+  );
+
+  // Clear disk cache on unmount
+  useEffect(() => {
+    return () => {
+      Image.clearDiskCache();
+    };
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -191,7 +211,8 @@ const AdoptScreen: React.FC = () => {
       <Image
         source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
-        cachePolicy="memory-disk"
+        cachePolicy="disk"
+        recyclingKey="main-background"
         contentFit="cover"
         transition={200}
       />
@@ -210,6 +231,8 @@ const AdoptScreen: React.FC = () => {
               <Image
                 source={require('@/assets/images/coin.png')}
                 style={styles.coinIcon}
+                cachePolicy="memory-disk"
+                recyclingKey="coin-icon"
               />
               <Text style={styles.coinText}>{userData?.coins || 0}</Text>
               <BuyCoins />
@@ -229,10 +252,14 @@ const AdoptScreen: React.FC = () => {
                       },
                     ]}
                   >
-                    <Image
-                      source={require('@/assets/images/cats/Gray Tabby.gif')}
-                      style={styles.catPreview}
-                    />
+                    {isFocused && (
+                      <Image
+                        source={require('@/assets/images/cats/Gray Tabby.gif')}
+                        style={styles.catPreview}
+                        cachePolicy="disk"
+                        recyclingKey="gacha-preview"
+                      />
+                    )}
                   </Animated.View>
                 </View>
               </View>
@@ -329,6 +356,8 @@ const AdoptScreen: React.FC = () => {
                     <Image
                       source={wonCat.animation}
                       style={styles.catResultImage}
+                      cachePolicy="memory-disk"
+                      recyclingKey={`won-cat-${wonCat.id}`}
                     />
                   </View>
 

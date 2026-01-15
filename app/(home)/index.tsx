@@ -4,7 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Suspense, useCallback, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Dimensions, Modal, Pressable, StyleSheet, Text, TouchableOpacity, Vibration, View } from 'react-native';
 import Purchases from 'react-native-purchases';
 import { useUpgrade } from '../UpgradeContext';
@@ -47,6 +47,13 @@ export default function HomeScreen() {
   ]
 
   const [modalQuote, setModalQuote] = useState(completionQuotes[0]);
+
+  // Clear memory cache on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Image.clearMemoryCache();
+    };
+  }, []);
 
   const checkProStatus = async () => {
     try {
@@ -159,8 +166,8 @@ export default function HomeScreen() {
         source={require('@/assets/images/background.webp')}
         style={styles.backgroundImage}
         contentFit="cover"
-        cachePolicy="memory-disk"
-        recyclingKey="background-image"
+        cachePolicy="disk"
+        recyclingKey="main-background"
       />
       <Suspense fallback={null}>
         <Furniture upgrades={upgrades} />

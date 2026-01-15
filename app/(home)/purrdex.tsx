@@ -66,6 +66,7 @@ export default function PurrdexScreen() {
 
     return () => {
       isMounted = false;
+      ExpoImage.clearMemoryCache(); // Clear memory on unmount
     };
   }, [allCats]);
 
