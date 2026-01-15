@@ -61,9 +61,11 @@ const AdoptScreen: React.FC = () => {
     const fetchUser = async () => {
       try {
         const token = await getToken();
-        if (!token) return;
+        if (!token || !isActive) return;
         const userData = await getUser(token);
-        setUserData(userData);
+        if (isActive) {
+          setUserData(userData);
+        }
       } catch (err) {
         if (isActive) {
           console.error("Failed to load data: adopt.tsx");
@@ -73,6 +75,9 @@ const AdoptScreen: React.FC = () => {
 
     fetchUser();
 
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const performGachaPull = useCallback(async (): Promise<Cat | null> => {
