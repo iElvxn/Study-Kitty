@@ -47,10 +47,11 @@ export default function SignUpScreen() {
 
   const handleSignInWithSSO = useCallback(async (authStrategy: string) => {
     try {
+      const redirectUrl = AuthSession.makeRedirectUri({ path: 'sso-callback' });
       // Start the authentication process by calling `startSSOFlow()`
       const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
         strategy: `oauth_${authStrategy}`,
-        redirectUrl: AuthSession.makeRedirectUri(),
+        redirectUrl,
       })
 
       if (createdSessionId) {

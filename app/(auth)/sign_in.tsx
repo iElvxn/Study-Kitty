@@ -25,8 +25,8 @@ export default function SignInScreen() {
     try {
       // Start the authentication process by calling `startSSOFlow()`
       const { createdSessionId, setActive, signIn, signUp } = await startSSOFlow({
-        strategy: `oauth_${authStrategy}`, // Type assertion to fix linter error
-        redirectUrl: AuthSession.makeRedirectUri(),
+        strategy: `oauth_${authStrategy}`,
+        redirectUrl: AuthSession.makeRedirectUri({ path: 'sso-callback' }),
       })
 
       if (createdSessionId) {
